@@ -7,11 +7,11 @@ from torch.utils.data import DataLoader
 import multiprocessing
 from torch.multiprocessing import freeze_support
 
-# 定义CNN模型
+# CNN model
 class ConvNet(nn.Module):
     def __init__(self):
         super(ConvNet, self).__init__()
-        # 第一个卷积层块
+        # The first convolutional module
         self.conv1 = nn.Sequential(
             nn.Conv2d(3, 32, kernel_size=3, padding=1),
             nn.BatchNorm2d(32),
@@ -19,7 +19,7 @@ class ConvNet(nn.Module):
             nn.MaxPool2d(kernel_size=2, stride=2)
         )
         
-        # 第二个卷积层块
+        # The second convolutional module
         self.conv2 = nn.Sequential(
             nn.Conv2d(32, 64, kernel_size=3, padding=1),
             nn.BatchNorm2d(64),
@@ -27,7 +27,7 @@ class ConvNet(nn.Module):
             nn.MaxPool2d(kernel_size=2, stride=2)
         )
         
-        # 第三个卷积层块
+        # The third convolutional module
         self.conv3 = nn.Sequential(
             nn.Conv2d(64, 128, kernel_size=3, padding=1),
             nn.BatchNorm2d(128),
@@ -35,7 +35,7 @@ class ConvNet(nn.Module):
             nn.MaxPool2d(kernel_size=2, stride=2)
         )
         
-        # 全连接层
+        # FCN
         self.fc = nn.Sequential(
             nn.Linear(128 * 4 * 4, 512),
             nn.ReLU(),
@@ -86,11 +86,9 @@ def test(model, testloader, device):
     return accuracy
 
 def main():
-    # 设置设备
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"Using device: {device}")
 
-    # 数据预处理
     transform_train = transforms.Compose([
         transforms.RandomCrop(32, padding=4),
         transforms.RandomHorizontalFlip(),
@@ -103,11 +101,10 @@ def main():
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
     ])
 
-    # 加载CIFAR-10数据集
     print("Loading datasets...")
     trainset = torchvision.datasets.CIFAR10(root='./basic_CNN/data', train=True,
                                           download=True, transform=transform_train)
-    # 根据CPU核心数设置num_workers
+
     num_workers = min(4, multiprocessing.cpu_count())
     trainloader = DataLoader(trainset, batch_size=128,
                             shuffle=True, num_workers=num_workers,
@@ -119,13 +116,11 @@ def main():
                            shuffle=False, num_workers=num_workers,
                            pin_memory=True if torch.cuda.is_available() else False)
 
-    # 初始化模型、损失函数和优化器
     print("Initializing model...")
     model = ConvNet().to(device)
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-    # 训练模型
     num_epochs = 10
     best_accuracy = 0
     print("Starting training...")
@@ -133,14 +128,13 @@ def main():
     for epoch in range(num_epochs):
         train(model, trainloader, criterion, optimizer, device, epoch)
         accuracy = test(model, testloader, device)
-        
-        # 保存最佳模型
+
         if accuracy > best_accuracy:
             best_accuracy = accuracy
             torch.save(model.state_dict(), './basic_CNN/best_model.pth')
-            print(f'模型已保存，当前最佳准确率: {best_accuracy:.2f}%')
+            print(f'Model saved. Highest accuracy : {best_accuracy:.2f}%')
 
-    print(f'训练完成！最终最佳准确率: {best_accuracy:.2f}%')
+    print(f'Finished training with accuracy : {best_accuracy:.2f}%')
 
 if __name__ == '__main__':
     freeze_support()

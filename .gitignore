@@ -1,0 +1,9 @@
+.vscode/
+test/
+build/
+debug/
+
+*.o
+
+# Binary
+cifar
