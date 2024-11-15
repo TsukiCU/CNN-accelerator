@@ -1,0 +1,24 @@
+I am recording some notes during development.
+Delete me after everything is done, and start writing real docs.
+
+############
+#  Memory  # 
+############
+cd tests
+make
+./test_memory
+
+the Memory Allocation Section deals with :
+1. Memory block allocation and deallocation regardless of device.
+2. Data transfering between CPU and GPU.
+3. Concurrency. No data racing should occur.
+4. Memory Alignment for optimized performance.
+5. Thorough Log information.
+
+TODO : 3,4,5.
+
+Issues:
+1. It's kind of weird that memory is a .cu file. Not sure if there is a better way of doing this.
+2. Should initializing with a size of 0: For CPU, ptr_ is not nullptr since malloc will return a
+   pointer regardless of size, but for GPU, ptr_ will be nullptr. Don't know if this is fine.
+3. Unit testing files should include large memory allocation scenarios. Not implemented yet.

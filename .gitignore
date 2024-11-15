@@ -1,9 +1,12 @@
 .vscode/
-test/
 build/
 debug/
 
 *.o
+test.*
 
 # Binary
 cifar
+test
+test_memory
+test_tensor
