@@ -45,3 +45,6 @@ is SHALLOW for now. This is a problem(I supppose). It needs to be fixed later.
 1. Tensor is created on CPU if device is not specified.
 2. Tensor should not inherit from MemoryBuffer.
 3. Tensor is created in strictly row-major order.
+4. It's indeed cumbersome that for each arithmetic operation, a switch (dtype_) is required.
+There are multiple ways of reducing redundancy, but let's just be happy if it works fine.
+5. clone() always return a deep-copy version of the current object. It is, though, not designed to replace copy / move constructor.

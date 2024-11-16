@@ -4,23 +4,29 @@
 #include "common.h"
 #include "memory.h"
 
+#define TENSOR_ADD 1
+#define TENSOR_SUB 2
+#define TENSOR_MUL 3
+#define TENSOR_DIV 4
+
 namespace cuda {
 
 /*
  * @brief : Tensor class. Support all common tensor operations.
- * @todo  : Log.
+ * @todo  : resize, broadcast, print, operator(), Log.
  */
 class Tensor {
 public:
-    Tensor(uint32_t dim, std::vector<uint32_t> shape, DataType dtype, DeviceType device);
-    Tensor(uint32_t dim, std::vector<uint32_t> shape, DataType dtype, void* data, bool copy, DeviceType device);
+    Tensor(std::vector<uint32_t> shape, DataType dtype, DeviceType device);
+    Tensor(std::vector<uint32_t> shape, DataType dtype, void* data, bool copy, DeviceType device);
+    Tensor(Tensor&& other) noexcept;
+    Tensor& operator=(Tensor&& other) noexcept;
     ~Tensor();
 
     uint32_t dim() const { return dim_; }
+    uint32_t size() const { return size_; }
     std::vector<uint32_t> shape() const { return shape_; }
     std::vector<uint32_t> stride() const { return stride_; }
-    // uint32_t size() const { return stride_[0] * shape_[0]; }
-    uint32_t size() const { return size_; }
 
     void reshape(const std::vector<uint32_t>& new_shape);
     void resize(const std::vector<uint32_t>& shape);
@@ -36,8 +42,12 @@ public:
     Tensor operator* (const Tensor &other);
     Tensor operator/ (const Tensor &other);
 
+    Tensor multiply_generic(float scale, const Tensor* other);
+    Tensor divide_generic(float scale, const Tensor* other);
+
     uint32_t operator() (const Tensor &other) const;
 
+    Tensor clone() const;  // For deep copy only.
     void print() const;
 
 private:
@@ -51,7 +61,6 @@ private:
     DataType dtype_;
 
     void create_tensor(void* data, bool copy);
-    void Tensor::for_each(std::function<void(void* element_ptr, const std::vector<uint32_t>& index)> func) const;
 };
 
 } // cuda
