@@ -5,20 +5,20 @@ namespace cuda
 
 MemoryBuffer::MemoryBuffer(uint32_t size, DeviceType device) :
 data_(nullptr), size_(size), device_(device) {
-    allocate(nullptr);
+    allocate();
 }
 
 MemoryBuffer::MemoryBuffer(void* data, uint32_t size, DeviceType device) :
 data_(nullptr), size_(size), device_(device)
 {
-    allocate(data);
+    allocate();
 }
 
 MemoryBuffer::~MemoryBuffer() {
     deallocate();
 }
 
-void MemoryBuffer::allocate(void* data) {
+void MemoryBuffer::allocate() {
     if (size_ == 0) {
         // TODO : Log info.
     }
@@ -27,33 +27,17 @@ void MemoryBuffer::allocate(void* data) {
         throw std::invalid_argument("Unknown device in allocate");
     }
 
-    if (data) {
-        if (device_ == DeviceType::CPU)
-            data_ = data;
-        else if (device_ == DeviceType::GPU) {
-            cudaPointerAttributes attr;
-            cudaError_t err = cudaPointerGetAttributes(&attr, data);
-            if (err != cudaSuccess || attr.type != cudaMemoryTypeDevice) {
-                // TODO: Log fatal.
-                throw std::invalid_argument("Invalid GPU pointers !");
-            }
-            data_ = data;
-        }
+    if (device_ == DeviceType::CPU) {
+        data_ = malloc(size_);
+        if (!data_)
+            // TODO: Log fatal.
+            throw std::bad_alloc();
     }
-
-    else {
-        if (device_ == DeviceType::CPU) {
-            data_ = malloc(size_);
-            if (!data_)
-                // TODO: Log fatal.
-                throw std::bad_alloc();
-        }
-        else if (device_ == DeviceType::GPU) {
-            cudaError_t err = cudaMalloc(&data_, size_);
-            if (err != cudaSuccess) {
-                // TODO: Log fatal.
-                throw std::runtime_error("Failed to allocate GPU memory");
-            }
+    else if (device_ == DeviceType::GPU) {
+        cudaError_t err = cudaMalloc(&data_, size_);
+        if (err != cudaSuccess) {
+            // TODO: Log fatal.
+            throw std::runtime_error("Failed to allocate GPU memory");
         }
     }
 }

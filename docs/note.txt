@@ -33,7 +33,10 @@ TODO: Specify which files can be .cc and use g++ to compile separately.
 1. data_ is a (void*) pointer, which technically means it does not contain any implied information, and can be
 used both as a pointer in CPU and GPU. But this should be done with caution. Use ``cudaPointerGetAttributes``.
 2. I allowed copy constructor in MemoryBuffer for very complicated reasons that I am still a little confused.
-If possible, always set copy(in Tensor's constructor) to true to avoid potential issues.
+If possible, always set copy(in Tensor's constructor) to true to avoid potential issues. Copy for MemoryBuffer
+is SHALLOW for now. This is a problem(I supppose). It needs to be fixed later.
+3. ******** Use SMART POINTER in MemoryBuffer !! This has to be done. ********
+4. A static factory method is added which I believe is necessary.
 
 ############
 #  Tensor  # 

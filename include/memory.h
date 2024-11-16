@@ -36,7 +36,7 @@ private:
     uint32_t size_;
     DeviceType device_;
 
-    void allocate(void* data);
+    void allocate();
     void deallocate();
 };
 

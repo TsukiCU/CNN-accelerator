@@ -38,7 +38,7 @@ public:
 
     uint32_t operator() (const Tensor &other) const;
 
-    void print();
+    void print() const;
 
 private:
     uint32_t dim_;
@@ -51,6 +51,7 @@ private:
     DataType dtype_;
 
     void create_tensor(void* data, bool copy);
+    void Tensor::for_each(std::function<void(void* element_ptr, const std::vector<uint32_t>& index)> func) const;
 };
 
 } // cuda

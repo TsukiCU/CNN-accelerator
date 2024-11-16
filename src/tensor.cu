@@ -29,17 +29,15 @@ void Tensor::create_tensor(void* data, bool copy) {
         if (copy) {
             // Log info.
             buffer_ = std::make_shared<MemoryBuffer> (data_size * size_, device_);
-            // buffer_->copy_from({data, data_size * size_, device_});
-            auto temp_buffer = std::make_shared<MemoryBuffer>(data_size * size_, device_, data);
-            buffer_->copy_from(*temp_buffer);
-        }
-        else {
+            // auto temp_buffer = std::make_shared<MemoryBuffer>(data_size * size_, device_, data);
+            // buffer_->copy_from(*temp_buffer);
+            buffer_->copy_from({data, data_size * size_, device_});
+        } else {
             // Log warn. Use data directly.
             // buffer_ = std::make_shared<MemoryBuffer>(data, data_size * size_, device_);
             buffer_ = std::make_shared<MemoryBuffer> (MemoryBuffer::create_from_existing(data, data_size * size_, device_));
         }
-    }
-    else {
+    } else {
         // Log info.
         buffer_ = std::make_shared<MemoryBuffer> (data_size * size_, device_);
     }
@@ -57,6 +55,10 @@ bool Tensor::operator== (const Tensor& other) {
 
 bool Tensor::operator!= (const Tensor& other) {
     return !(*this == other);
+}
+
+void print() {
+
 }
 
 } // cuda
