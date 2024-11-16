@@ -57,7 +57,22 @@ bool Tensor::operator!= (const Tensor& other) {
     return !(*this == other);
 }
 
-void print() {
+void Tensor::reshape(const std::vector<uint32_t>& new_shape) {
+    uint32_t elem_count = 1;
+    for (uint32_t n : new_shape)
+        elem_count *= n;
+    if (elem_count != size_) {
+        // TODO: Log error.
+        throw std::runtime_error("Reshape failed: New shape doesn't fit. ");
+    }
+
+    size_ = 1;
+    shape_ = new_shape;
+    stride_.resize(dim_);
+    for (int i = dim_-1; i >= 0; --i) {
+        stride_[i] = size_;
+        size_ *= shape_[i];
+    }
 
 }
 

@@ -22,7 +22,7 @@ public:
     // uint32_t size() const { return stride_[0] * shape_[0]; }
     uint32_t size() const { return size_; }
 
-    void reshape(const std::vector<uint32_t>& shape);
+    void reshape(const std::vector<uint32_t>& new_shape);
     void resize(const std::vector<uint32_t>& shape);
     Tensor broadcast(const std::vector<uint32_t> shape, std::vector<uint32_t> is_broadcast);
 
