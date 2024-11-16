@@ -2,7 +2,7 @@ NVCC = nvcc
 
 TARGET = test_memory
 TEST_SRC = test_memory.cu
-SRC = ../src/memory.cu
+SRC = ../src/memory.cu ../src/common.cu
 
 LIBS = -lgtest -lgtest_main -lpthread # -lcudart -lcuda
 LDFLAGS = -L/usr/local/lib

@@ -4,74 +4,97 @@ namespace cuda
 {
 
 MemoryBuffer::MemoryBuffer(uint32_t size, DeviceType device) :
-ptr_(nullptr), size_(size), device_type_(device) {
-    allocate();
+data_(nullptr), size_(size), device_(device) {
+    allocate(nullptr);
+}
+
+MemoryBuffer::MemoryBuffer(void* data, uint32_t size, DeviceType device) :
+data_(nullptr), size_(size), device_(device)
+{
+    allocate(data);
 }
 
 MemoryBuffer::~MemoryBuffer() {
     deallocate();
 }
 
-void MemoryBuffer::allocate() {
+void MemoryBuffer::allocate(void* data) {
     if (size_ == 0) {
         // TODO : Log info.
     }
-    if (device_type_ == DeviceType::CPU) {
-        ptr_ = malloc(size_);
-        if (!ptr_)
-            // TODO: Log fatal.
-            throw std::bad_alloc();
-    }
-    else if (device_type_ == DeviceType::GPU) {
-        cudaError_t err = cudaMalloc(&ptr_, size_);
-        if (err != cudaSuccess) {
-            // TODO: Log fatal.
-            throw std::runtime_error("Failed to allocate GPU memory");
-        }
-    }
-    else {
+    if (device_ != DeviceType::CPU && device_ != DeviceType::GPU) {
         // TODO: Log error.
         throw std::invalid_argument("Unknown device in allocate");
+    }
+
+    if (data) {
+        if (device_ == DeviceType::CPU)
+            data_ = data;
+        else if (device_ == DeviceType::GPU) {
+            cudaPointerAttributes attr;
+            cudaError_t err = cudaPointerGetAttributes(&attr, data);
+            if (err != cudaSuccess || attr.type != cudaMemoryTypeDevice) {
+                // TODO: Log fatal.
+                throw std::invalid_argument("Invalid GPU pointers !");
+            }
+            data_ = data;
+        }
+    }
+
+    else {
+        if (device_ == DeviceType::CPU) {
+            data_ = malloc(size_);
+            if (!data_)
+                // TODO: Log fatal.
+                throw std::bad_alloc();
+        }
+        else if (device_ == DeviceType::GPU) {
+            cudaError_t err = cudaMalloc(&data_, size_);
+            if (err != cudaSuccess) {
+                // TODO: Log fatal.
+                throw std::runtime_error("Failed to allocate GPU memory");
+            }
+        }
     }
 }
 
 void MemoryBuffer::deallocate() {
-    if (device_type_ == DeviceType::CPU)
-        free(ptr_);
-    else if (device_type_ == DeviceType::GPU) {
-        cudaError_t err = cudaFree(ptr_);
+    if (device_ == DeviceType::CPU)
+        free(data_);
+    else if (device_ == DeviceType::GPU) {
+        cudaError_t err = cudaFree(data_);
         if (err != cudaSuccess)
             // TODO: Log error
             throw std::runtime_error("Failed to free GPU memory.");
     }
     else
         // TODO: Log error.
-        throw std::runtime_error("Unknown type in deallocate");
-    ptr_ = nullptr;
+        throw std::invalid_argument("Unknown type in deallocate");
+    data_ = nullptr;
 }
 
 void MemoryBuffer::copy_from(const MemoryBuffer& src) {
-    if (!ptr_ || !src.ptr_) {
+    if (!data_ || !src.data_) {
         // Log error.
         throw std::runtime_error("Null pointers.");
     }
 
     cudaMemcpyKind kind;
-    if (device_type_ == DeviceType::CPU && src.device_type_ == DeviceType::GPU) {
+    if (device_ == DeviceType::CPU && src.device_ == DeviceType::GPU) {
         // TODO: Log debug
         kind = cudaMemcpyDeviceToHost;
     }
-    else if (device_type_ == DeviceType::GPU && src.device_type_ == DeviceType::CPU) {
+    else if (device_ == DeviceType::GPU && src.device_ == DeviceType::CPU) {
         // TODO: Log debug
         kind = cudaMemcpyHostToDevice;
     }
-    else if (device_type_ == DeviceType::GPU && src.device_type_ == DeviceType::GPU) {
+    else if (device_ == DeviceType::GPU && src.device_ == DeviceType::GPU) {
         // TODO: Log debug
         kind = cudaMemcpyDeviceToDevice;
     }
-    else if (device_type_ == DeviceType::CPU && src.device_type_ == DeviceType::CPU) {
+    else if (device_ == DeviceType::CPU && src.device_ == DeviceType::CPU) {
         // TODO: Log info, copying between hosts, using memcpy.
-        std::memcpy(ptr_, src.ptr_, size_);
+        std::memcpy(data_, src.data_, size_);
         return;
     }
     else {
@@ -79,7 +102,7 @@ void MemoryBuffer::copy_from(const MemoryBuffer& src) {
         throw std::invalid_argument("Invalid device types for copy");
     }
 
-    cudaError_t err = cudaMemcpy(ptr_, src.ptr_, size_, kind);
+    cudaError_t err = cudaMemcpy(data_, src.data_, size_, kind);
     if (err != cudaSuccess) {
         // TODO: Log error.
         throw std::runtime_error("Failed to copy memory");
