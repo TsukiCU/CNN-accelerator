@@ -18,8 +18,8 @@ namespace cuda {
  */
 class Tensor {
 public:
-    Tensor(std::vector<uint32_t> shape, DataType dtype, DeviceType device);
-    Tensor(std::vector<uint32_t> shape, DataType dtype, void* data, bool copy, DeviceType device);
+    Tensor(std::vector<uint32_t> shape, DataType dtype);
+    Tensor(std::vector<uint32_t> shape, DataType dtype, void* data, bool copy);
     Tensor(Tensor&& other) noexcept;
     Tensor& operator=(Tensor&& other) noexcept;
     ~Tensor();
@@ -54,12 +54,10 @@ public:
 private:
     uint32_t dim_;
     uint32_t size_;
+    DataType dtype_;
     std::vector<uint32_t> shape_;
     std::vector<uint32_t> stride_;
     std::shared_ptr<MemoryBuffer> buffer_;
-
-    DeviceType device_;
-    DataType dtype_;
 
     void create_tensor(void* data, bool copy);
 };

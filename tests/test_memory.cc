@@ -1,5 +1,4 @@
 #include <gtest/gtest.h>
-#include <cuda_runtime.h>
 #include "../include/memory.h"
 
 class MBTest : public ::testing::Test {

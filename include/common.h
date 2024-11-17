@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <vector>
+#include <cstring>
 #include <memory>
 #include <iostream>
 #include <unordered_map>
@@ -10,12 +11,6 @@
 
 namespace cuda
 {
-
-enum class DeviceType {
-    CPU,
-    GPU,
-    UNKNOWN,
-};
 
 enum class DataType {
     DataTypeUnkown = 0,

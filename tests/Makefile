@@ -1,4 +1,4 @@
-NVCC = nvcc
+NVCC = g++
 
 TARGET = test_memory
 TEST_SRC = test_memory.cu

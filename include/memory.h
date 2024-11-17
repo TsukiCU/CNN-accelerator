@@ -3,7 +3,6 @@
 
 #include "common.h"
 #include "noncopyable.h"
-#include <cuda_runtime.h>
 
 namespace cuda
 {
@@ -14,19 +13,18 @@ namespace cuda
  */
 class MemoryBuffer {
 public:
-    MemoryBuffer(uint32_t size, DeviceType device);
-    MemoryBuffer(void* data, uint32_t size, DeviceType device);
+    MemoryBuffer(uint32_t size);
+    MemoryBuffer(void* data, uint32_t size);
     ~MemoryBuffer();
 
     void* data() const { return data_; }
     uint32_t get_size() const { return size_; }
-    DeviceType get_device_type() const { return device_; }
 
     void copy_from(const MemoryBuffer& src);
     void copy_to(MemoryBuffer& dst) const;
 
-    static MemoryBuffer create_from_existing(void* data, uint32_t size, DeviceType device) {
-        MemoryBuffer buffer(size, device);
+    static MemoryBuffer create_from_existing(void* data, uint32_t size) {
+        MemoryBuffer buffer(size);
         buffer.data_ = data;
         return buffer;
     }
@@ -34,7 +32,6 @@ public:
 private:
     void* data_;
     uint32_t size_;
-    DeviceType device_;
 
     void allocate();
     void deallocate();
