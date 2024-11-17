@@ -80,8 +80,36 @@ Tensor& Tensor::operator=(Tensor&& other) noexcept {
 }
 
 bool Tensor::operator== (const Tensor& other) {
-    if (size_ != other.size_ || dim_ != other.dim_ || stride_.size() != other.stride_.size())
-        return false;
+    if (size_ != other.size_ || dim_ != other.dim_ || stride_.size() != other.stride_.size()
+        || dtype_ != other.dtype_ || device_ != other.device_)
+            return false;
+    for (uint32_t i = 0; i < shape_.size(); ++i)
+        if (shape_[i] != other.shape_[i] || stride_[i] != other.stride_[i])
+            return false;
+    // compare element by element.
+    void* data_ptr = buffer_->data();
+    const void* other_ptr = buffer_->data();
+    if (!data_ptr || !other_ptr) {
+        // Log error.
+        throw std::runtime_error("can't compare between empty tensors.");
+    }
+
+    bool equal = false;
+    switch (dtype_) {
+// void arithmetic_generic(int type, void* data, const void* other_data, uint32_t size, float scale) 
+        case DataType::DataTypeInt8:
+            return arithmetic_generic<int8_t>(TENSOR_EQL, data_ptr, other_ptr, size_, 0, device_);
+        case DataType::DataTypeInt16:
+            return arithmetic_generic<int16_t>(TENSOR_EQL, data_ptr, other_ptr, size_, 0, device_);
+        case DataType::DataTypeInt32:
+            return arithmetic_generic<int32_t>(TENSOR_EQL, data_ptr, other_ptr, size_, 0, device_);
+        case DataType::DataTypeFloat32:
+            return arithmetic_generic<float>(TENSOR_EQL, data_ptr, other_ptr, size_, 0, device_);
+        case DataType::DataTypeFloat64:
+            return arithmetic_generic<double>(TENSOR_EQL, data_ptr, other_ptr, size_, 0, device_);
+        default:
+            throw std::invalid_argument("Unsupported data type for comparison.");
+    }
 }
 
 bool Tensor::operator!= (const Tensor& other) {
@@ -98,19 +126,19 @@ Tensor Tensor::operator+ (const Tensor& other) {
 
     switch (dtype_) {
         case DataType::DataTypeInt8:
-            arithmetic_generic<int8_t>(TENSOR_ADD, data_ptr, other_ptr, size_, 0);
+            arithmetic_generic<int8_t>(TENSOR_ADD, data_ptr, other_ptr, size_, 0, device_);
             break;
         case DataType::DataTypeInt16:
-            arithmetic_generic<int16_t>(TENSOR_ADD, data_ptr, other_ptr, size_, 0);
+            arithmetic_generic<int16_t>(TENSOR_ADD, data_ptr, other_ptr, size_, 0, device_);
             break;
         case DataType::DataTypeInt32:
-            arithmetic_generic<int32_t>(TENSOR_ADD, data_ptr, other_ptr, size_, 0);
+            arithmetic_generic<int32_t>(TENSOR_ADD, data_ptr, other_ptr, size_, 0, device_);
             break;
         case DataType::DataTypeFloat32:
-            arithmetic_generic<float>(TENSOR_ADD, data_ptr, other_ptr, size_, 0);
+            arithmetic_generic<float>(TENSOR_ADD, data_ptr, other_ptr, size_, 0, device_);
             break;
         case DataType::DataTypeFloat64:
-            arithmetic_generic<double>(TENSOR_ADD, data_ptr, other_ptr, size_, 0);
+            arithmetic_generic<double>(TENSOR_ADD, data_ptr, other_ptr, size_, 0, device_);
             break;
         default:
             // Log error
@@ -130,19 +158,19 @@ Tensor Tensor::operator- (const Tensor& other) {
 
     switch (dtype_) {
         case DataType::DataTypeInt8:
-            arithmetic_generic<int8_t>(TENSOR_SUB, data_ptr, other_ptr, size_, 0);
+            arithmetic_generic<int8_t>(TENSOR_SUB, data_ptr, other_ptr, size_, 0, device_);
             break;
         case DataType::DataTypeInt16:
-            arithmetic_generic<int16_t>(TENSOR_SUB, data_ptr, other_ptr, size_, 0);
+            arithmetic_generic<int16_t>(TENSOR_SUB, data_ptr, other_ptr, size_, 0, device_);
             break;
         case DataType::DataTypeInt32:
-            arithmetic_generic<int32_t>(TENSOR_SUB, data_ptr, other_ptr, size_, 0);
+            arithmetic_generic<int32_t>(TENSOR_SUB, data_ptr, other_ptr, size_, 0, device_);
             break;
         case DataType::DataTypeFloat32:
-            arithmetic_generic<float>(TENSOR_SUB, data_ptr, other_ptr, size_, 0);
+            arithmetic_generic<float>(TENSOR_SUB, data_ptr, other_ptr, size_, 0, device_);
             break;
         case DataType::DataTypeFloat64:
-            arithmetic_generic<double>(TENSOR_SUB, data_ptr, other_ptr, size_, 0);
+            arithmetic_generic<double>(TENSOR_SUB, data_ptr, other_ptr, size_, 0, device_);
             break;
         default:
             // Log error
@@ -175,19 +203,19 @@ Tensor Tensor::multiply_generic(float scale, const Tensor* other) {
 
     switch (dtype_) {
         case DataType::DataTypeInt8:
-            arithmetic_generic<int8_t>(TENSOR_MUL, data_ptr, other_ptr, size_, scale);
+            arithmetic_generic<int8_t>(TENSOR_MUL, data_ptr, other_ptr, size_, scale, device_);
             break;
         case DataType::DataTypeInt16:
-            arithmetic_generic<int16_t>(TENSOR_MUL, data_ptr, other_ptr, size_, scale);
+            arithmetic_generic<int16_t>(TENSOR_MUL, data_ptr, other_ptr, size_, scale, device_);
             break;
         case DataType::DataTypeInt32:
-            arithmetic_generic<int32_t>(TENSOR_MUL, data_ptr, other_ptr, size_, scale);
+            arithmetic_generic<int32_t>(TENSOR_MUL, data_ptr, other_ptr, size_, scale, device_);
             break;
         case DataType::DataTypeFloat32:
-            arithmetic_generic<float>(TENSOR_MUL, data_ptr, other_ptr, size_, scale);
+            arithmetic_generic<float>(TENSOR_MUL, data_ptr, other_ptr, size_, scale, device_);
             break;
         case DataType::DataTypeFloat64:
-            arithmetic_generic<double>(TENSOR_MUL, data_ptr, other_ptr, size_, scale);
+            arithmetic_generic<double>(TENSOR_MUL, data_ptr, other_ptr, size_, scale, device_);
             break;
         default:
             // Log error
@@ -220,19 +248,19 @@ Tensor Tensor::divide_generic(float scale, const Tensor* other) {
 
     switch (dtype_) {
         case DataType::DataTypeInt8:
-            arithmetic_generic<int8_t>(TENSOR_DIV, data_ptr, other_ptr, size_, scale);
+            arithmetic_generic<int8_t>(TENSOR_DIV, data_ptr, other_ptr, size_, scale, device_);
             break;
         case DataType::DataTypeInt16:
-            arithmetic_generic<int16_t>(TENSOR_DIV, data_ptr, other_ptr, size_, scale);
+            arithmetic_generic<int16_t>(TENSOR_DIV, data_ptr, other_ptr, size_, scale, device_);
             break;
         case DataType::DataTypeInt32:
-            arithmetic_generic<int32_t>(TENSOR_DIV, data_ptr, other_ptr, size_, scale);
+            arithmetic_generic<int32_t>(TENSOR_DIV, data_ptr, other_ptr, size_, scale, device_);
             break;
         case DataType::DataTypeFloat32:
-            arithmetic_generic<float>(TENSOR_DIV, data_ptr, other_ptr, size_, scale);
+            arithmetic_generic<float>(TENSOR_DIV, data_ptr, other_ptr, size_, scale, device_);
             break;
         case DataType::DataTypeFloat64:
-            arithmetic_generic<double>(TENSOR_DIV, data_ptr, other_ptr, size_, scale);
+            arithmetic_generic<double>(TENSOR_DIV, data_ptr, other_ptr, size_, scale, device_);
             break;
         default:
             // Log error
@@ -243,7 +271,8 @@ Tensor Tensor::divide_generic(float scale, const Tensor* other) {
 }
 
 template <typename T>
-void arithmetic_generic(int type, void* data, const void* other_data, uint32_t size, float scale) {
+bool arithmetic_generic(int type, void* data, const void* other_data, uint32_t size, float scale, DeviceType device) {
+    bool ret = false;
     T* typed_data = static_cast<T*>(data);
     const T* typed_other_data = nullptr;
     if (other_data)
@@ -278,10 +307,13 @@ void arithmetic_generic(int type, void* data, const void* other_data, uint32_t s
                     typed_data[i] /= static_cast<T>(scale);
             }
             break;
+        case TENSOR_EQL:
+            break;
         default:
             // Log error
             throw std::invalid_argument("Unsupported arithmetic type. ");
     }
+    return ret;
 }
 
 void Tensor::reshape(const std::vector<uint32_t>& new_shape) {
@@ -308,8 +340,8 @@ Tensor Tensor::clone() const {
     return new_tensor;
 }
 
-Tensor broadcast(const std::vector<uint32_t> shape, std::vector<uint32_t> is_broadcast) {
-    // Log info
+void Tensor::print() const {
+
 }
 
 } // cuda

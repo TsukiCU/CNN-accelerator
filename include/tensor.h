@@ -8,6 +8,7 @@
 #define TENSOR_SUB 2
 #define TENSOR_MUL 3
 #define TENSOR_DIV 4
+#define TENSOR_EQL 5
 
 namespace cuda {
 
