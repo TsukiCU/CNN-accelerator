@@ -18,7 +18,6 @@ namespace cuda {
  */
 class Tensor {
 public:
-    Tensor();
     Tensor(std::vector<uint32_t> shape, DataType dtype, DeviceType device);
     Tensor(std::vector<uint32_t> shape, DataType dtype, DeviceType device, void* data, bool copy);
     Tensor(Tensor&& other) noexcept;
@@ -43,19 +42,18 @@ public:
     Tensor operator* (const Tensor &other);
     Tensor operator/ (const Tensor &other);
 
+    float at(const std::vector<uint32_t>& indices); // Return type is set to float
+
+    // Helper functions
     Tensor multiply_generic(float scale, const Tensor* other);
     Tensor divide_generic(float scale, const Tensor* other);
-
-    template <typename T>
-    float& at(const std::vector<uint32_t>& indices);
-
-    static Tensor empty();
-    static Tensor rand();
-    static Tensor ones();
-    static Tensor zeros();
-
     Tensor clone() const;  // For deep copy only.
     void print() const;
+
+    // Static functions
+    static Tensor zeros(const std::vector<uint32_t>& shape, DataType dtype);
+    static Tensor ones(const std::vector<uint32_t>& shape, DataType dtype);
+    static Tensor random(const std::vector<uint32_t>& shape, DataType dtype);
 
 private:
     uint32_t dim_;
@@ -66,21 +64,21 @@ private:
     std::vector<uint32_t> stride_;
     std::shared_ptr<MemoryBuffer> buffer_;
 
-    // Neural networks fundamentals.
+    // Neural networks fundamentals
     Tensor gradient_();
     Tensor relu();
     Tensor sigmoid();
     Tensor matmul(const Tensor& other) const;
 
-    static Tensor zeros(const std::vector<uint32_t>& shape, DataType dtype);
-    static Tensor ones(const std::vector<uint32_t>& shape, DataType dtype);
-    static Tensor random(const std::vector<uint32_t>& shape, DataType dtype);
-
-    // helper functions
+    // Helper functions
     void create_tensor(void* data, bool copy);
-    bool check_indice(std::vector<uint32_t> indice);
+    bool check_indices(std::vector<uint32_t> indices);
     uint32_t compute_offset(std::vector<uint32_t> indice);
-    void fill(float data);
+
+    void fill(float value); // data is set to float but can fit with any data type.
+
+    template<typename F>
+    void dispatch_type(DataType dtype, F&& func);
 };
 
 } // cuda

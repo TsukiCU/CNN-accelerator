@@ -48,3 +48,9 @@ is SHALLOW for now. This is a problem(I supppose). It needs to be fixed later.
 4. It's indeed cumbersome that for each arithmetic operation, a switch (dtype_) is required.
 There are multiple ways of reducing redundancy, but let's just be happy if it works fine.
 5. clone() always return a deep-copy version of the current object. It is, though, not designed to replace copy / move constructor.
+
+
+-------------------- 11.17 --------------------
+1. Tensor created by a vector?
+2. Implement at(), fill().
+3. The old problem oh fuck

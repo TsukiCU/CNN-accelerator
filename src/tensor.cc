@@ -2,8 +2,6 @@
 
 namespace cuda
 {
-
-Tensor::Tensor() {}
     
 Tensor::Tensor(const std::vector<uint32_t> shape, DataType dtype, DeviceType device)
     : dim_(shape.size()), shape_(shape), dtype_(dtype), device_(device)
@@ -350,31 +348,72 @@ void fill(float value) {
 
 }
 
-bool Tensor::check_indice(std::vector<uint32_t> indice) {
-    if (indice.size() != dim_)
+bool Tensor::check_indices(std::vector<uint32_t> indices) {
+    if (indices.size() != dim_)
         return false;
     for (uint32_t i = 0; i < dim_; ++i)
-        if (indice[i] >= shape_[i])
+        if (indices[i] >= shape_[i])
             return false;
     return true;
 }
 
-uint32_t Tensor::compute_offset(std::vector<uint32_t> indice) {
+uint32_t Tensor::compute_offset(std::vector<uint32_t> indices) {
     // TODO: handle potential overflow here.
     uint32_t offset = 0;
+    if (!check_indices(indices))
+        return -1;
     for (uint32_t i = 0; i < dim_; ++i)
-        offset += stride_[i] * indice[i];
+        offset += stride_[i] * indices[i];
     return offset;
 }
 
-template <>
-float& Tensor::at<float>(const std::vector<uint32_t>& indices) {
-    check_indice(indices);
-    return reinterpret_cast<float*>(buffer_->data())[compute_offset(indices)];
+template<typename F>
+void Tensor::dispatch_type(DataType dtype, F&& func) {
+    switch(dtype) {
+        case DataType::DataTypeInt8:
+            func(static_cast<int8_t*>(buffer_->data()));
+            break;
+        case DataType::DataTypeInt16:
+            func(static_cast<int16_t*>(buffer_->data()));
+            break;
+        case DataType::DataTypeInt32:
+            func(static_cast<int32_t*>(buffer_->data()));
+            break;
+        case DataType::DataTypeFloat32:
+            func(static_cast<float*>(buffer_->data()));
+            break;
+        case DataType::DataTypeFloat64:
+            func(static_cast<double*>(buffer_->data()));
+            break;
+        case DataType::DataTypeUnkown:
+            // Log error.
+            throw std::runtime_error("Unsupported data type while dispatching. ");
+        default:
+            // Log error.
+            throw std::runtime_error("Unsupported data type while dispatching. ");
+    }
 }
 
-void Tensor::print() const {
-    // Not implemented.
+float Tensor::at(const std::vector<uint32_t>& indices) {
+    uint32_t offset = compute_offset(indices);
+    if (offset == -1) {
+        // Log error.
+        throw std::invalid_argument("indice out of range. ");
+    }
+    float result = 0;
+    dispatch_type(dtype_, [&](auto* data) {
+        result = static_cast<float>(data[offset]);
+    });
+    return result;
+}
+
+void Tensor::fill(float value) {
+    dispatch_type(dtype_, [&](auto* data) {
+        using data_type = std::decay_t<decltype(*data)>;
+        for (uint32_t i = 0; i < size_; ++i) {
+            data[i] = static_cast<data_type>(value);
+        }
+    });
 }
 
 } // cuda
