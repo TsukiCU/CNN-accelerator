@@ -1,17 +1,17 @@
-NVCC = nvcc
+GCC = g++
 
-TARGET = test_memory
-TEST_SRC = test_memory.cu
-SRC = ../src/memory.cu
+TARGET = test_tensor
+TEST_SRC = test_tensor.cc
+SRC = ../src/memory.cc ../src/common.cc ../src/tensor.cc
 
-LIBS = -lgtest -lgtest_main -lpthread # -lcudart -lcuda
+LIBS = -lgtest -lgtest_main -lpthread -lfmt
 LDFLAGS = -L/usr/local/lib
 INCLUDES = -I/usr/local/include
 
 all: $(TARGET)
 
 $(TARGET): $(TEST_SRC) $(SRC)
-	$(NVCC) -o $(TARGET) $(TEST_SRC) $(SRC) $(LIBS) $(LDFLAGS) $(INCLUDES)
+	$(GCC) -o $(TARGET) $(TEST_SRC) $(SRC) $(LIBS) $(LDFLAGS) $(INCLUDES)
 
 clean:
 	rm -f $(TARGET)

@@ -1,16 +1,15 @@
 #include <gtest/gtest.h>
-#include <cuda_runtime.h>
 #include "../include/memory.h"
 
 class MBTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        cudaError_t err = cudaSetDevice(0);
-        ASSERT_EQ(err, cudaSuccess) << "Failed to set CUDA device";
+        // cudaError_t err = cudaSetDevice(0);
+        // ASSERT_EQ(err, cudaSuccess) << "Failed to set CUDA device";
     }
 
     void TearDown() override {
-        cudaDeviceReset();
+        // cudaDeviceReset();
     }
 };
 
