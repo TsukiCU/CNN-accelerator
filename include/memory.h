@@ -13,8 +13,8 @@ namespace cuda
  */
 class MemoryBuffer {
 public:
-    MemoryBuffer(uint32_t size);
-    MemoryBuffer(void* data, uint32_t size);
+    MemoryBuffer(uint32_t size, DeviceType device);
+    MemoryBuffer(void* data, uint32_t size, DeviceType device);
     ~MemoryBuffer();
 
     void* data() const { return data_; }
@@ -23,8 +23,8 @@ public:
     void copy_from(const MemoryBuffer& src);
     void copy_to(MemoryBuffer& dst) const;
 
-    static MemoryBuffer create_from_existing(void* data, uint32_t size) {
-        MemoryBuffer buffer(size);
+    static MemoryBuffer create_from_existing(void* data, uint32_t size, DeviceType device) {
+        MemoryBuffer buffer(size, device);
         buffer.data_ = data;
         return buffer;
     }
@@ -32,6 +32,7 @@ public:
 private:
     void* data_;
     uint32_t size_;
+    DeviceType device_;
 
     void allocate();
     void deallocate();

@@ -2,15 +2,17 @@
 
 namespace cuda
 {
+
+Tensor::Tensor() {}
     
-Tensor::Tensor(const std::vector<uint32_t> shape, DataType dtype)
-    : dim_(shape.size()), shape_(shape), dtype_(dtype)
+Tensor::Tensor(const std::vector<uint32_t> shape, DataType dtype, DeviceType device)
+    : dim_(shape.size()), shape_(shape), dtype_(dtype), device_(device)
 {
     create_tensor(nullptr, false);
 }
 
-Tensor::Tensor(const std::vector<uint32_t> shape, DataType dtype, void* data, bool copy)
-    : dim_(shape.size()), shape_(shape), dtype_(dtype)
+Tensor::Tensor(const std::vector<uint32_t> shape, DataType dtype, DeviceType device, void* data, bool copy)
+    : dim_(shape.size()), shape_(shape), dtype_(dtype), device_(device)
 {
     if (!data && copy) {
         // Log fatal.
@@ -31,18 +33,18 @@ void Tensor::create_tensor(void* data, bool copy) {
     if (data) {
         if (copy) {
             // Log info.
-            buffer_ = std::make_shared<MemoryBuffer> (data_size * size_);
+            buffer_ = std::make_shared<MemoryBuffer> (data_size * size_, device_);
             // auto temp_buffer = std::make_shared<MemoryBuffer>(data_size * size_, data);
             // buffer_->copy_from(*temp_buffer);
-            buffer_->copy_from({data, data_size * size_});
+            buffer_->copy_from({data, data_size * size_, device_});
         } else {
             // Log warn. Use data directly.
             // buffer_ = std::make_shared<MemoryBuffer>(data, data_size * size_);
-            buffer_ = std::make_shared<MemoryBuffer> (MemoryBuffer::create_from_existing(data, data_size * size_));
+            buffer_ = std::make_shared<MemoryBuffer> (MemoryBuffer::create_from_existing(data, data_size * size_, device_));
         }
     } else {
         // Log info.
-        buffer_ = std::make_shared<MemoryBuffer> (data_size * size_);
+        buffer_ = std::make_shared<MemoryBuffer> (data_size * size_, device_);
     }
 }
 
@@ -78,7 +80,7 @@ Tensor& Tensor::operator=(Tensor&& other) noexcept {
 
 template <typename T>
 bool arithmetic_generic(int type, void* data, const void* other_data, uint32_t size, float scale) {
-    bool ret = false;
+    bool ret = true;
     T* typed_data = static_cast<T*>(data);
     const T* typed_other_data = nullptr;
     if (other_data)
@@ -114,6 +116,12 @@ bool arithmetic_generic(int type, void* data, const void* other_data, uint32_t s
             }
             break;
         case TENSOR_EQL:
+            for (uint32_t i = 0; i < size; ++i) {
+                if (typed_data[i] != typed_other_data[i]) {
+                    ret = false;
+                    break;
+                }
+            }
             break;
         default:
             // Log error
@@ -311,7 +319,8 @@ Tensor Tensor::divide_generic(float scale, const Tensor* other) {
     return ans;
 }
 
-void Tensor::reshape(const std::vector<uint32_t>& new_shape) {
+Tensor Tensor::reshape(const std::vector<uint32_t>& new_shape) {
+    Tensor ans = clone();
     uint32_t elem_count = 1;
 
     for (const uint32_t& n : new_shape)
@@ -322,21 +331,50 @@ void Tensor::reshape(const std::vector<uint32_t>& new_shape) {
     }
 
     int tmp_size = 1;
-    shape_ = new_shape;
-    stride_.resize(dim_);
+    ans.shape_ = std::move(new_shape);
+    ans.dim_ = new_shape.size();
+    ans.stride_.resize(dim_);
     for (int i = dim_-1; i >= 0; --i) {
-        stride_[i] = tmp_size;
+        ans.stride_[i] = tmp_size;
         tmp_size *= shape_[i];
     }
+    return ans;
 }
 
 Tensor Tensor::clone() const {
-    Tensor new_tensor(shape_, dtype_, buffer_->data(), true);
+    Tensor new_tensor(shape_, dtype_, device_, buffer_->data(), true);
     return new_tensor;
 }
 
-void Tensor::print() const {
+void fill(float value) {
 
+}
+
+bool Tensor::check_indice(std::vector<uint32_t> indice) {
+    if (indice.size() != dim_)
+        return false;
+    for (uint32_t i = 0; i < dim_; ++i)
+        if (indice[i] >= shape_[i])
+            return false;
+    return true;
+}
+
+uint32_t Tensor::compute_offset(std::vector<uint32_t> indice) {
+    // TODO: handle potential overflow here.
+    uint32_t offset = 0;
+    for (uint32_t i = 0; i < dim_; ++i)
+        offset += stride_[i] * indice[i];
+    return offset;
+}
+
+template <>
+float& Tensor::at<float>(const std::vector<uint32_t>& indices) {
+    check_indice(indices);
+    return reinterpret_cast<float*>(buffer_->data())[compute_offset(indices)];
+}
+
+void Tensor::print() const {
+    // Not implemented.
 }
 
 } // cuda

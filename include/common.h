@@ -21,6 +21,12 @@ enum class DataType {
     DataTypeFloat64 = 16,
 };
 
+enum class DeviceType {
+    CPU = 0,
+    GPU = 1,
+    UNKNOWN = 2,
+};
+
 uint32_t get_data_size(DataType type);
 
 } // cuda

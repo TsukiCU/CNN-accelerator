@@ -14,24 +14,24 @@ namespace cuda {
 
 /*
  * @brief : Tensor class. Support all common tensor operations.
- * @todo  : resize, broadcast, print, operator(), Log.
+ * @todo  : at, gradient, sigmoid, relu..
  */
 class Tensor {
 public:
-    Tensor(std::vector<uint32_t> shape, DataType dtype);
-    Tensor(std::vector<uint32_t> shape, DataType dtype, void* data, bool copy);
+    Tensor();
+    Tensor(std::vector<uint32_t> shape, DataType dtype, DeviceType device);
+    Tensor(std::vector<uint32_t> shape, DataType dtype, DeviceType device, void* data, bool copy);
     Tensor(Tensor&& other) noexcept;
     Tensor& operator=(Tensor&& other) noexcept;
     ~Tensor();
 
     uint32_t dim() const { return dim_; }
     uint32_t size() const { return size_; }
+    DeviceType device() const { return device_; }
     std::vector<uint32_t> shape() const { return shape_; }
     std::vector<uint32_t> stride() const { return stride_; }
 
-    void reshape(const std::vector<uint32_t>& new_shape);
-    void resize(const std::vector<uint32_t>& shape);
-    Tensor broadcast(const std::vector<uint32_t> shape, std::vector<uint32_t> is_broadcast);
+    Tensor reshape(const std::vector<uint32_t>& new_shape);
 
     bool operator== (const Tensor &other);
     bool operator!= (const Tensor &other);
@@ -46,7 +46,13 @@ public:
     Tensor multiply_generic(float scale, const Tensor* other);
     Tensor divide_generic(float scale, const Tensor* other);
 
-    uint32_t operator() (const Tensor &other) const;
+    template <typename T>
+    float& at(const std::vector<uint32_t>& indices);
+
+    static Tensor empty();
+    static Tensor rand();
+    static Tensor ones();
+    static Tensor zeros();
 
     Tensor clone() const;  // For deep copy only.
     void print() const;
@@ -55,11 +61,26 @@ private:
     uint32_t dim_;
     uint32_t size_;
     DataType dtype_;
+    DeviceType device_;
     std::vector<uint32_t> shape_;
     std::vector<uint32_t> stride_;
     std::shared_ptr<MemoryBuffer> buffer_;
 
+    // Neural networks fundamentals.
+    Tensor gradient_();
+    Tensor relu();
+    Tensor sigmoid();
+    Tensor matmul(const Tensor& other) const;
+
+    static Tensor zeros(const std::vector<uint32_t>& shape, DataType dtype);
+    static Tensor ones(const std::vector<uint32_t>& shape, DataType dtype);
+    static Tensor random(const std::vector<uint32_t>& shape, DataType dtype);
+
+    // helper functions
     void create_tensor(void* data, bool copy);
+    bool check_indice(std::vector<uint32_t> indice);
+    uint32_t compute_offset(std::vector<uint32_t> indice);
+    void fill(float data);
 };
 
 } // cuda

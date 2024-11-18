@@ -3,11 +3,15 @@
 namespace cuda
 {
 
-MemoryBuffer::MemoryBuffer(uint32_t size) : data_(nullptr), size_(size) {
+MemoryBuffer::MemoryBuffer(uint32_t size, DeviceType device) :
+    data_(nullptr), size_(size), device_(device)
+{
     allocate();
 }
 
-MemoryBuffer::MemoryBuffer(void* data, uint32_t size) : data_(nullptr), size_(size) {
+MemoryBuffer::MemoryBuffer(void* data, uint32_t size, DeviceType device) :
+    data_(nullptr), size_(size), device_(device)
+{
     allocate();
 }
 
