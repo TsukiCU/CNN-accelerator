@@ -344,10 +344,6 @@ Tensor Tensor::clone() const {
     return new_tensor;
 }
 
-void fill(float value) {
-
-}
-
 bool Tensor::check_indices(std::vector<uint32_t> indices) {
     if (indices.size() != dim_)
         return false;
@@ -394,15 +390,15 @@ void Tensor::dispatch_type(DataType dtype, F&& func) {
     }
 }
 
-float Tensor::at(const std::vector<uint32_t>& indices) {
+double Tensor::at(const std::vector<uint32_t>& indices) {
     uint32_t offset = compute_offset(indices);
     if (offset == -1) {
         // Log error.
         throw std::invalid_argument("indice out of range. ");
     }
-    float result = 0;
+    double result = 0;
     dispatch_type(dtype_, [&](auto* data) {
-        result = static_cast<float>(data[offset]);
+        result = static_cast<double>(data[offset]);
     });
     return result;
 }

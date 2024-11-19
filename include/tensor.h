@@ -42,7 +42,7 @@ public:
     Tensor operator* (const Tensor &other);
     Tensor operator/ (const Tensor &other);
 
-    float at(const std::vector<uint32_t>& indices); // Return type is set to float
+    double at(const std::vector<uint32_t>& indices); // Return type is set to double
 
     // Helper functions
     Tensor multiply_generic(float scale, const Tensor* other);
@@ -65,7 +65,7 @@ private:
     std::shared_ptr<MemoryBuffer> buffer_;
 
     // Neural networks fundamentals
-    Tensor gradient_();
+    Tensor gradient();
     Tensor relu();
     Tensor sigmoid();
     Tensor matmul(const Tensor& other) const;
