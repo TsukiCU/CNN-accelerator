@@ -52,5 +52,10 @@ There are multiple ways of reducing redundancy, but let's just be happy if it wo
 
 -------------------- 11.17 --------------------
 1. Tensor created by a vector?
-2. Implement at(), fill().
+2. Implement at(), fill().  ✅
 3. The old problem oh fuck
+
+
+-------------------- 11.22 --------------------
+1. dispatch_types could be useful for simplifying code structures.
+2. operator() for modifying a place.

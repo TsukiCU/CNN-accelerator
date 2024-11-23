@@ -3,6 +3,7 @@
 
 #include "common.h"
 #include "memory.h"
+#include "threadpool.h"
 
 #define TENSOR_ADD 1
 #define TENSOR_SUB 2
@@ -21,6 +22,7 @@ public:
     Tensor(std::vector<uint32_t> shape, DataType dtype, DeviceType device);
     Tensor(std::vector<uint32_t> shape, DataType dtype, DeviceType device, void* data, bool copy);
     Tensor(Tensor&& other) noexcept;
+    Tensor& operator=(const Tensor& other);
     Tensor& operator=(Tensor&& other) noexcept;
     ~Tensor();
 
@@ -42,7 +44,11 @@ public:
     Tensor operator* (const Tensor &other);
     Tensor operator/ (const Tensor &other);
 
-    float at(const std::vector<uint32_t>& indices); // Return type is set to float
+    // template<typename... Indices>
+    // avoid operator()(Indices... indices);
+    template <typename T>
+    T& operator()(const std::vector<uint32_t>& indices);
+    double at(const std::vector<uint32_t>& indices);    // Return type is set to double.
 
     // Helper functions
     Tensor multiply_generic(float scale, const Tensor* other);
@@ -65,7 +71,7 @@ private:
     std::shared_ptr<MemoryBuffer> buffer_;
 
     // Neural networks fundamentals
-    Tensor gradient_();
+    Tensor gradient();
     Tensor relu();
     Tensor sigmoid();
     Tensor matmul(const Tensor& other) const;
@@ -75,10 +81,28 @@ private:
     bool check_indices(std::vector<uint32_t> indices);
     uint32_t compute_offset(std::vector<uint32_t> indice);
 
+    template <typename T>
+    DataType get_dtype(T t) {
+        if constexpr (std::is_same_v<T, int8_t>) {
+            return DataType::DataTypeInt8;
+        } else if constexpr (std::is_same_v<T, int16_t>) {
+            return DataType::DataTypeInt16;
+        } else if constexpr (std::is_same_v<T, int32_t>) {
+            return DataType::DataTypeInt32;
+        } else if constexpr (std::is_same_v<T, float>) {
+            return DataType::DataTypeFloat32;
+        } else if constexpr (std::is_same_v<T, double>) {
+            return DataType::DataTypeFloat64;
+        } else {
+            return DataType::DataTypeUnknown;
+        }
+    }
+
+
     void fill(float value); // data is set to float but can fit with any data type.
 
-    template<typename F>
-    void dispatch_type(DataType dtype, F&& func);
+    template<typename F, typename... Args>
+    void dispatch_type(DataType dtype, F&& func, Args&&... args);
 };
 
 } // cuda

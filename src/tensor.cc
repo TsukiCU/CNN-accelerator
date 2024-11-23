@@ -1,5 +1,5 @@
 #include "../include/tensor.h"
-
+using namespace std;
 namespace cuda
 {
     
@@ -31,13 +31,11 @@ void Tensor::create_tensor(void* data, bool copy) {
     if (data) {
         if (copy) {
             // Log info.
-            buffer_ = std::make_shared<MemoryBuffer> (data_size * size_, device_);
-            // auto temp_buffer = std::make_shared<MemoryBuffer>(data_size * size_, data);
-            // buffer_->copy_from(*temp_buffer);
-            buffer_->copy_from({data, data_size * size_, device_});
+            buffer_ = std::make_shared<MemoryBuffer> (data, data_size * size_, device_);
+            // buffer_->copy_from({data, data_size * size_, device_});
         } else {
             // Log warn. Use data directly.
-            // buffer_ = std::make_shared<MemoryBuffer>(data, data_size * size_);
+            // TBH this should never get called.
             buffer_ = std::make_shared<MemoryBuffer> (MemoryBuffer::create_from_existing(data, data_size * size_, device_));
         }
     } else {
@@ -52,26 +50,53 @@ Tensor::Tensor(Tensor&& other) noexcept
 {
     other.dim_ = 0;
     other.size_ = 0;
-    other.dtype_ = DataType::DataTypeUnkown;
+    other.dtype_ = DataType::DataTypeUnknown;
 }
 
 Tensor::~Tensor() {
     // No specific things need to be done as MemoryBuffer is handled by smart pointer.
 }
 
+Tensor& Tensor::operator=(const Tensor& other) {
+    if (this != &other) {
+        // TODO : Resource release?
+        dim_ = other.dim_;
+        size_ = other.size_;
+        dtype_ = other.dtype_;
+        device_ = other.device_;
+        shape_ = std::move(other.shape_);
+        stride_ = std::move(other.stride_);
+
+        if (other.buffer_) {
+            void* other_ptr = other.buffer_->data();
+            uint32_t size = other.buffer_->size();
+            if (!other_ptr) {
+                // Log fatal.
+                throw std::runtime_error("Copy constructor failed.");
+            }
+            buffer_ = std::make_shared<MemoryBuffer> (other_ptr, size, device_);
+        }
+        else
+            buffer_ = nullptr;
+    }
+
+    return *this;
+}
+
 Tensor& Tensor::operator=(Tensor&& other) noexcept {
-    if (*this != other) {
+    if (this != &other) {
         // TODO: Log info. May need to release resource first.
         dim_ = other.dim_;
         size_ = other.size_;
         dtype_ = other.dtype_;
+        device_ = other.device_;
         shape_ = std::move(other.shape_);
-        buffer_ = std::move(other.buffer_);
         stride_ = std::move(other.stride_);
+        buffer_ = std::move(other.buffer_);
 
         other.dim_ = 0;
         other.size_ = 0;
-        other.dtype_ = DataType::DataTypeUnkown;
+        other.dtype_ = DataType::DataTypeUnknown;
     }
     return *this;
 }
@@ -99,8 +124,9 @@ bool arithmetic_generic(int type, void* data, const void* other_data, uint32_t s
                     typed_data[i] *= typed_other_data[i];
             }
             else {
-                for (uint32_t i = 0; i < size; ++i)
+                for (uint32_t i = 0; i < size; ++i) {
                     typed_data[i] *= static_cast<T>(scale);
+                }
             }
             break;
         case TENSOR_DIV:
@@ -123,7 +149,7 @@ bool arithmetic_generic(int type, void* data, const void* other_data, uint32_t s
             break;
         default:
             // Log error
-            throw std::invalid_argument("Unsupported arithmetic type. ");
+            throw std::invalid_argument("Unsupported arithmetic type.");
     }
     return ret;
 }
@@ -166,7 +192,7 @@ bool Tensor::operator!= (const Tensor& other) {
 Tensor Tensor::operator+ (const Tensor& other) {
     if (size_ != other.size_ || dim_ != other.dim_ || stride_.size() != other.stride_.size())
         // TODO: Log error
-        throw std::runtime_error("Unable to perform add. ");
+        throw std::runtime_error("Unable to perform add.");
     Tensor ans = clone();
     void* data_ptr = ans.buffer_->data();
     const void* other_ptr = other.buffer_->data();
@@ -189,7 +215,7 @@ Tensor Tensor::operator+ (const Tensor& other) {
             break;
         default:
             // Log error
-            throw std::invalid_argument("Unsupported type for multiplication! ");
+            throw std::invalid_argument("Unsupported type for multiplication!");
     }
 
     return ans;
@@ -198,7 +224,7 @@ Tensor Tensor::operator+ (const Tensor& other) {
 Tensor Tensor::operator- (const Tensor& other) {
     if (size_ != other.size_ || dim_ != other.dim_ || stride_.size() != other.stride_.size())
         // TODO: Log error
-        throw std::runtime_error("Unable to perform add. ");
+        throw std::runtime_error("Unable to perform add.");
     Tensor ans = clone();
     void* data_ptr = ans.buffer_->data();
     const void* other_ptr = other.buffer_->data();
@@ -221,7 +247,7 @@ Tensor Tensor::operator- (const Tensor& other) {
             break;
         default:
             // Log error
-            throw std::invalid_argument("Unsupported type for multiplication! ");
+            throw std::invalid_argument("Unsupported type for multiplication!");
     }
 
     return ans;
@@ -230,7 +256,7 @@ Tensor Tensor::operator- (const Tensor& other) {
 Tensor Tensor::operator* (const Tensor& other) {
     if (size_ != other.size_ || dim_ != other.dim_ || stride_.size() != other.stride_.size())
         // TODO: Log error
-        throw std::runtime_error("Unable to perform multiplication. ");
+        throw std::runtime_error("Unable to perform multiplication.");
     return multiply_generic(0, &other);
 }
 
@@ -239,14 +265,11 @@ Tensor Tensor::operator* (float scale) {
 }
 
 Tensor Tensor::multiply_generic(float scale, const Tensor* other) {
-    if (other == nullptr) {
-        // TODO: Log error.
-        throw std::runtime_error("Multiply with a null Tensor is not allowed.");
-    }
     // Tensor ans = *this;
     Tensor ans = clone();
-    void* data_ptr = ans.buffer_->data();
-    void* other_ptr = other->buffer_->data();
+    void* data_ptr = ans.buffer_->data(), *other_ptr = nullptr;
+    if (other)
+        other_ptr = other->buffer_->data();
 
     switch (dtype_) {
         case DataType::DataTypeInt8:
@@ -266,7 +289,7 @@ Tensor Tensor::multiply_generic(float scale, const Tensor* other) {
             break;
         default:
             // Log error
-            throw std::invalid_argument("Unsupported type for multiplication! ");
+            throw std::invalid_argument("Unsupported type for multiplication!");
     }
 
     return ans;
@@ -275,7 +298,7 @@ Tensor Tensor::multiply_generic(float scale, const Tensor* other) {
 Tensor Tensor::operator/ (const Tensor& other) {
     if (size_ != other.size_ || dim_ != other.dim_ || stride_.size() != other.stride_.size())
         // TODO: Log error
-        throw std::runtime_error("Unable to perform division. ");
+        throw std::runtime_error("Unable to perform division.");
     return divide_generic(0, &other);
 }
 
@@ -284,14 +307,11 @@ Tensor Tensor::operator/ (float scale) {
 }
 
 Tensor Tensor::divide_generic(float scale, const Tensor* other) {
-    if (other == nullptr) {
-        // TODO: Log error.
-        throw std::runtime_error("Divide by a null Tensor is not allowed.");
-    }
     // Tensor ans = *this;
     Tensor ans = clone();
-    void* data_ptr = ans.buffer_->data();
-    void* other_ptr = other->buffer_->data();
+    void* data_ptr = ans.buffer_->data(), *other_ptr = nullptr;
+    if (other)
+        other_ptr = other->buffer_->data();
 
     switch (dtype_) {
         case DataType::DataTypeInt8:
@@ -311,7 +331,7 @@ Tensor Tensor::divide_generic(float scale, const Tensor* other) {
             break;
         default:
             // Log error
-            throw std::invalid_argument("Unsupported type for division! ");
+            throw std::invalid_argument("Unsupported type for division!");
     }
 
     return ans;
@@ -325,7 +345,7 @@ Tensor Tensor::reshape(const std::vector<uint32_t>& new_shape) {
         elem_count *= n;
     if (elem_count != size_) {
         // TODO: Log error.
-        throw std::runtime_error("Reshape failed: New shape doesn't fit. ");
+        throw std::runtime_error("Reshape failed: New shape doesn't fit.");
     }
 
     int tmp_size = 1;
@@ -342,10 +362,6 @@ Tensor Tensor::reshape(const std::vector<uint32_t>& new_shape) {
 Tensor Tensor::clone() const {
     Tensor new_tensor(shape_, dtype_, device_, buffer_->data(), true);
     return new_tensor;
-}
-
-void fill(float value) {
-
 }
 
 bool Tensor::check_indices(std::vector<uint32_t> indices) {
@@ -367,42 +383,43 @@ uint32_t Tensor::compute_offset(std::vector<uint32_t> indices) {
     return offset;
 }
 
-template<typename F>
-void Tensor::dispatch_type(DataType dtype, F&& func) {
+// typename... Args for extensibility
+template<typename F, typename... Args>
+void Tensor::dispatch_type(DataType dtype, F&& func, Args&&... args) {
     switch(dtype) {
         case DataType::DataTypeInt8:
-            func(static_cast<int8_t*>(buffer_->data()));
+            func(static_cast<int8_t*>(buffer_->data()), std::forward<Args>(args)...);
             break;
         case DataType::DataTypeInt16:
-            func(static_cast<int16_t*>(buffer_->data()));
+            func(static_cast<int16_t*>(buffer_->data()), std::forward<Args>(args)...);
             break;
         case DataType::DataTypeInt32:
-            func(static_cast<int32_t*>(buffer_->data()));
+            func(static_cast<int32_t*>(buffer_->data()), std::forward<Args>(args)...);
             break;
         case DataType::DataTypeFloat32:
-            func(static_cast<float*>(buffer_->data()));
+            func(static_cast<float*>(buffer_->data()), std::forward<Args>(args)...);
             break;
         case DataType::DataTypeFloat64:
-            func(static_cast<double*>(buffer_->data()));
+            func(static_cast<double*>(buffer_->data()), std::forward<Args>(args)...);
             break;
-        case DataType::DataTypeUnkown:
+        case DataType::DataTypeUnknown:
             // Log error.
-            throw std::runtime_error("Unsupported data type while dispatching. ");
+            throw std::runtime_error("Unsupported data type while dispatching.");
         default:
             // Log error.
-            throw std::runtime_error("Unsupported data type while dispatching. ");
+            throw std::runtime_error("Unsupported data type while dispatching.");
     }
 }
 
-float Tensor::at(const std::vector<uint32_t>& indices) {
+double Tensor::at(const std::vector<uint32_t>& indices) {
     uint32_t offset = compute_offset(indices);
     if (offset == -1) {
         // Log error.
-        throw std::invalid_argument("indice out of range. ");
+        throw std::out_of_range("Indice out of range.");
     }
-    float result = 0;
+    double result = 0;
     dispatch_type(dtype_, [&](auto* data) {
-        result = static_cast<float>(data[offset]);
+        result = static_cast<double>(data[offset]);
     });
     return result;
 }
@@ -416,4 +433,32 @@ void Tensor::fill(float value) {
     });
 }
 
+template <typename T>
+T& Tensor::operator()(const std::vector<uint32_t>& indices) {
+    // Need find a way to check the data type.
+    uint32_t offset = compute_offset(indices);
+    if (offset >= size_) {
+        throw std::out_of_range("Indice out of range.");
+    }
+    T* data = static_cast<T*>(buffer_->data());
+    return data[offset];
+}
+
 } // cuda
+
+int main()
+{
+    const std::vector<uint32_t> shape = {2, 3, 4};
+    cuda::Tensor t1(shape, cuda::DataType::DataTypeFloat32, cuda::DeviceType::CPU);
+    cuda::Tensor t2(shape, cuda::DataType::DataTypeFloat32, cuda::DeviceType::CPU);
+
+    std::vector<uint32_t> indices = {1, 2, 3};
+
+    t1.operator()<float>(indices) = 3.14;
+    t2.operator()<float>(indices) = 3.14;
+
+    if (t1 == t2)
+        cout << "yes!" << endl;
+
+    return 0;
+}

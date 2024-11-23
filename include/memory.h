@@ -18,10 +18,11 @@ public:
     ~MemoryBuffer();
 
     void* data() const { return data_; }
-    uint32_t get_size() const { return size_; }
+    uint32_t size() const { return size_; }
 
-    void copy_from(const MemoryBuffer& src);
+    void resize(uint32_t new_size);
     void copy_to(MemoryBuffer& dst) const;
+    void copy_from(const MemoryBuffer& src);
 
     static MemoryBuffer create_from_existing(void* data, uint32_t size, DeviceType device) {
         MemoryBuffer buffer(size, device);
@@ -34,7 +35,7 @@ private:
     uint32_t size_;
     DeviceType device_;
 
-    void allocate();
+    void allocate(void* data);
     void deallocate();
 };
 
