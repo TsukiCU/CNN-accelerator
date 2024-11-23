@@ -1,5 +1,4 @@
 #include "../include/tensor.h"
-
 namespace cuda
 {
     
@@ -31,8 +30,11 @@ void Tensor::create_tensor(void* data, bool copy) {
     if (data) {
         if (copy) {
             // Log info.
-            buffer_ = std::make_shared<MemoryBuffer> (data, data_size * size_, device_);
             // buffer_->copy_from({data, data_size * size_, device_});
+
+            // buffer_ = std::make_shared<MemoryBuffer> (data, data_size * size_, device_);
+            buffer_ = std::make_shared<MemoryBuffer>(data_size * size_, device_);
+            std::memcpy(buffer_->data(), data, data_size * size_);
         } else {
             // Log warn. Use data directly.
             // TBH this should never get called.
@@ -44,6 +46,12 @@ void Tensor::create_tensor(void* data, bool copy) {
     }
 }
 
+Tensor::Tensor(const Tensor& other) :
+    dim_(other.dim()), shape_(std::move(other.shape_)), dtype_(other.dtype_), device_(other.device_)
+{
+    create_tensor(other.buffer_->data(), true);
+}
+
 Tensor::Tensor(Tensor&& other) noexcept
     : dim_(other.dim_), size_(other.size_), shape_(std::move(other.shape_)),
       stride_(std::move(other.stride_)), buffer_(std::move(other.buffer_)), dtype_(other.dtype_)
@@ -51,6 +59,7 @@ Tensor::Tensor(Tensor&& other) noexcept
     other.dim_ = 0;
     other.size_ = 0;
     other.dtype_ = DataType::DataTypeUnknown;
+    other.buffer_.reset();
 }
 
 Tensor::~Tensor() {
@@ -59,13 +68,14 @@ Tensor::~Tensor() {
 
 Tensor& Tensor::operator=(const Tensor& other) {
     if (this != &other) {
-        // TODO : Resource release?
+        buffer_.reset();
+
         dim_ = other.dim_;
         size_ = other.size_;
         dtype_ = other.dtype_;
         device_ = other.device_;
-        shape_ = std::move(other.shape_);
-        stride_ = std::move(other.stride_);
+        shape_ = other.shape_;
+        stride_ = other.stride_;
 
         if (other.buffer_) {
             void* other_ptr = other.buffer_->data();
@@ -74,7 +84,9 @@ Tensor& Tensor::operator=(const Tensor& other) {
                 // Log fatal.
                 throw std::runtime_error("Copy constructor failed.");
             }
-            buffer_ = std::make_shared<MemoryBuffer> (other_ptr, size, device_);
+            // buffer_ = std::make_shared<MemoryBuffer> (other_ptr, size, device_);
+            buffer_ = std::make_shared<MemoryBuffer>(size, device_);
+            std::memcpy(buffer_->data(), other.buffer_->data(), size);
         }
         else
             buffer_ = nullptr;
@@ -85,18 +97,20 @@ Tensor& Tensor::operator=(const Tensor& other) {
 
 Tensor& Tensor::operator=(Tensor&& other) noexcept {
     if (this != &other) {
-        // TODO: Log info. May need to release resource first.
+        buffer_.reset();
+
         dim_ = other.dim_;
         size_ = other.size_;
         dtype_ = other.dtype_;
         device_ = other.device_;
-        shape_ = std::move(other.shape_);
-        stride_ = std::move(other.stride_);
-        buffer_ = std::move(other.buffer_);
+        shape_ = other.shape_;
+        stride_ = other.stride_;
+        buffer_ = other.buffer_;
 
         other.dim_ = 0;
         other.size_ = 0;
         other.dtype_ = DataType::DataTypeUnknown;
+        other.buffer_.reset();
     }
     return *this;
 }
@@ -442,6 +456,27 @@ T& Tensor::operator()(const std::vector<uint32_t>& indices) {
     }
     T* data = static_cast<T*>(buffer_->data());
     return data[offset];
+}
+
+Tensor Tensor::rand(const std::vector<uint32_t>& shape, double lower=0.0, double upper=1.0) {
+    int size = 1;
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<double> dist(lower, upper);
+    for (uint32_t n : shape) {
+        size *= n;
+    }
+    double* data = (double*)malloc(size * get_data_size(DataType::DataTypeFloat64));
+    if (!data) {
+        // Log fatal.
+        throw std::runtime_error("malloc failed in rand.");
+    }
+    for (uint32_t i=0; i < size; ++i) {
+        data[i] = dist(gen);
+    }
+    Tensor ret(shape, DataType::DataTypeFloat64, DeviceType::CPU, (void*)data, true);
+    free(data); // This is safe.
+    return ret;
 }
 
 } // cuda
