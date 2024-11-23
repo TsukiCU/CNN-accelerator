@@ -480,20 +480,3 @@ Tensor Tensor::rand(const std::vector<uint32_t>& shape, double lower=0.0, double
 }
 
 } // cuda
-
-int main()
-{
-    const std::vector<uint32_t> shape = {2, 3, 4};
-    cuda::Tensor t1(shape, cuda::DataType::DataTypeFloat32, cuda::DeviceType::CPU);
-    cuda::Tensor t2(shape, cuda::DataType::DataTypeFloat32, cuda::DeviceType::CPU);
-
-    std::vector<uint32_t> indices = {1, 2, 3};
-
-    t1.operator()<float>(indices) = 3.14;
-    t2.operator()<float>(indices) = 3.14;
-
-    if (t1 == t2)
-        cout << "yes!" << endl;
-
-    return 0;
-}
