@@ -21,6 +21,7 @@ class Tensor {
 public:
     Tensor(std::vector<uint32_t> shape, DataType dtype, DeviceType device);
     Tensor(std::vector<uint32_t> shape, DataType dtype, DeviceType device, void* data, bool copy);
+    Tensor(const Tensor& other);
     Tensor(Tensor&& other) noexcept;
     Tensor& operator=(const Tensor& other);
     Tensor& operator=(Tensor&& other) noexcept;
@@ -56,10 +57,10 @@ public:
     Tensor clone() const;  // For deep copy only.
     void print() const;
 
-    // Static functions
-    static Tensor zeros(const std::vector<uint32_t>& shape, DataType dtype);
-    static Tensor ones(const std::vector<uint32_t>& shape, DataType dtype);
-    static Tensor random(const std::vector<uint32_t>& shape, DataType dtype);
+    // Static functions. double if dtype is not specified.
+    static Tensor zeros(const std::vector<uint32_t>& shape, DataType dtype);    // Not implemented.
+    static Tensor ones(const std::vector<uint32_t>& shape, DataType dtype);     // Not implemented.
+    static Tensor rand(const std::vector<uint32_t>& shape, double lower, double upper); // Double by default.
 
 private:
     uint32_t dim_;
@@ -80,6 +81,7 @@ private:
     void create_tensor(void* data, bool copy);
     bool check_indices(std::vector<uint32_t> indices);
     uint32_t compute_offset(std::vector<uint32_t> indice);
+    void fill(float value); // data is set to float but can fit with any data type.
 
     template <typename T>
     DataType get_dtype(T t) {
@@ -97,9 +99,6 @@ private:
             return DataType::DataTypeUnknown;
         }
     }
-
-
-    void fill(float value); // data is set to float but can fit with any data type.
 
     template<typename F, typename... Args>
     void dispatch_type(DataType dtype, F&& func, Args&&... args);
