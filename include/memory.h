@@ -18,7 +18,7 @@ public:
     ~MemoryBuffer();
 
     void* data() const { return data_; }
-    uint32_t get_size() const { return size_; }
+    uint32_t size() const { return size_; }
 
     void resize(uint32_t new_size);
     void copy_to(MemoryBuffer& dst) const;
@@ -35,7 +35,7 @@ private:
     uint32_t size_;
     DeviceType device_;
 
-    void allocate();
+    void allocate(void* data);
     void deallocate();
 };
 

@@ -7,7 +7,7 @@ uint32_t get_data_size(DataType type) {
     uint32_t ret;
 
     switch (type) {
-        case DataType::DataTypeUnkown:
+        case DataType::DataTypeUnknown:
             // Log error.
             ret = 0;
             break;

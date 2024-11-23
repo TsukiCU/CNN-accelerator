@@ -6,32 +6,34 @@ namespace cuda
 MemoryBuffer::MemoryBuffer(uint32_t size, DeviceType device) :
     data_(nullptr), size_(size), device_(device)
 {
-    allocate();
+    allocate(nullptr);
 }
 
 MemoryBuffer::MemoryBuffer(void* data, uint32_t size, DeviceType device) :
     data_(nullptr), size_(size), device_(device)
 {
-    allocate();
+    allocate(data);
 }
 
 MemoryBuffer::~MemoryBuffer() {
     deallocate();
 }
 
-void MemoryBuffer::allocate() {
+void MemoryBuffer::allocate(void* data) {
     if (size_ == 0) {
         // TODO : Log info.
     }
-    if (device_ == DeviceType::CPU)
-        data_ = malloc(size_);
-    else {
+    if (device_ != DeviceType::CPU) {
         // Log error.
-        throw std::invalid_argument("Not supported device when allocating. ");
+        throw std::invalid_argument("Not implemented yet.");
     }
-    if (!data_)
+    data_ = malloc(size_);
+    if (!data_) {
         // TODO : Log fatal
         throw std::bad_alloc();
+    }
+    if (data)
+        memcpy(data_, data, size_);
 }
 
 void MemoryBuffer::deallocate() {
@@ -54,11 +56,11 @@ void MemoryBuffer::copy_to(MemoryBuffer& dst) const {
 void MemoryBuffer::resize(uint32_t new_size) {
     if (!data_) {
         // Log error. Shouldn't get here anyway.
-        throw std::runtime_error("Can't resize when buffer isn't allocated. ");
+        throw std::runtime_error("Can't resize when buffer isn't allocated.");
     }
     deallocate();
     size_ = new_size;
-    allocate();
+    allocate(nullptr);
 }
 
 } // cuda

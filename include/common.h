@@ -6,13 +6,13 @@
 #include <cstring>
 #include <memory>
 #include <iostream>
-#include <spdlog/spdlog.h>
+//#include <spdlog/spdlog.h>
 
 namespace cuda
 {
 
 enum class DataType {
-    DataTypeUnkown = 0,
+    DataTypeUnknown = 0,
     DataTypeInt8 = 1,
     DataTypeInt16 = 2,
     DataTypeInt32 = 4,
