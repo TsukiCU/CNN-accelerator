@@ -1,6 +1,7 @@
 .vscode/
 build/
 debug/
+archived/
 
 *.o
 test.*
