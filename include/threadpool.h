@@ -1,17 +1,14 @@
 // https://github.com/progschj/ThreadPool/blob/master/ThreadPool.h
 
-#ifndef CUDA_THREAD_POOL_H
-#define CUDA_THREAD_POOL_H
+#pragma once
 
-#include <vector>
-#include <queue>
-#include <memory>
-#include <thread>
-#include <mutex>
 #include <condition_variable>
 #include <future>
 #include <functional>
-#include <stdexcept>
+
+#include "common.h"
+
+namespace cuda {
 
 class ThreadPool {
 public:
@@ -97,4 +94,4 @@ inline ThreadPool::~ThreadPool()
         worker.join();
 }
 
-#endif
+} // cuda

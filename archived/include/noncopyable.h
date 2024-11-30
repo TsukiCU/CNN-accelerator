@@ -1,5 +1,4 @@
-#ifndef _CUDA_NONCOPYABLE_H__
-#define _CUDA_NONCOPYABLE_H__
+#pragma once
 
 namespace cuda {
 
@@ -11,6 +10,4 @@ public:
     Noncopyable& operator=(const Noncopyable&) = delete;
 };
 
-}
-
-#endif // _CUDA_NONCOPYABLE_H__
+} // cuda

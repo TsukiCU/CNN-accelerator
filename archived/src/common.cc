@@ -1,4 +1,5 @@
 #include "../include/common.h"
+#include "../include/log.h"
 
 namespace cuda
 {
@@ -7,10 +8,6 @@ uint32_t get_data_size(DataType type) {
     uint32_t ret;
 
     switch (type) {
-        case DataType::DataTypeUnknown:
-            // Log error.
-            ret = 0;
-            break;
         case DataType::DataTypeInt8:
             ret = 1;
             break;
@@ -26,9 +23,10 @@ uint32_t get_data_size(DataType type) {
         case DataType::DataTypeFloat64:
             ret = 8;
             break;
+        case DataType::DataTypeUnknown:
+            LOG_ERROR("get_data_size() : Unknown data type.");
         default:
-            // Log fatal.
-            throw std::invalid_argument("Invalid data type! ");
+            LOG_ERROR("get_data_size() : Invalid data type.");
     }
 
     return ret;
