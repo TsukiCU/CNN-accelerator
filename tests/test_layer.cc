@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include "../include/layer.h"
 
-using namespace cuda;
+using namespace snnf;
 
 // ========== LinearLayer Constructor Test ============
 
@@ -20,7 +20,6 @@ TEST(LinearLayerTest, ConstructorInitializesParameters) {
 TEST(LinearLayerTest, ForwardPass) {
     LinearLayer<float> layer(4, 3);
     Tensor<float> input({2, 4}, {1, 2, 3, 4, 5, 6, 7, 8});  // Shape [2, 4]
-
     Tensor<float> output = layer.forward(input);
     EXPECT_EQ(output.shape(), (std::vector<uint32_t>{2, 3}));  // Output shape [2, 3]
 }

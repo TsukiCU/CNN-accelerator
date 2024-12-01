@@ -10,6 +10,6 @@
 #include <algorithm>
 #include <stdexcept>
 
-namespace cuda {
+namespace snnf {
 
-} // cuda
+} // snnf

@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include "../include/tensor.h"
 
-using namespace cuda;
+using namespace snnf;
 
 // ========== Tensor Constructors ============
 

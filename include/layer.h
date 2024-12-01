@@ -4,7 +4,7 @@
 #include "utils.h"
 #include "tensor.h"
 
-namespace cuda {
+namespace snnf {
 
 /*
  * @brief : base class for all layers.
@@ -51,6 +51,10 @@ private:
 
 /*********************** Impl of LinearLayer methods ***********************/
 
+/* 
+ * @brief : initialzie weights randomly and bias to 0.
+ * @todo : support other initialization methods. 
+ */
 template <typename T>
 LinearLayer<T>::LinearLayer(uint32_t in_features, uint32_t out_features)
     : in_features_(in_features),
@@ -61,44 +65,56 @@ LinearLayer<T>::LinearLayer(uint32_t in_features, uint32_t out_features)
       grad_weights_({in_features, out_features}),
       grad_bias_({1, out_features})
 {
-    // @brief : initialzie weights randomly and bias to 0.
-    // @todo : support other initialization methods. 
     weights_.random();
-
     bias_.fill(static_cast<T>(0));
 }
 
-// Forward pass
+/*
+ * @brief : Forward propagation
+ */
 template <typename T>
 Tensor<T> LinearLayer<T>::forward(const Tensor<T>& input)
 {
-    input_ = input;  // Cache input for backward pass
-    Tensor<T> output = input.matmul(weights_);  // Linear transformation
-    output = output.add(bias_);  // Add bias (supports broadcasting)
+    input_ = input; 
+    Tensor<T> output = input.matmul(weights_);  // Linear transformation.
+    if (output.shape() == bias_.shape()) {
+        output = output.add(bias_);
+    } else {
+        LOG_INFO("Layer::forward : Broadcasting bias to a new shape.");
+        Tensor<T> new_bias = bias_.broadcast_to(output.shape());
+        output = output.add(new_bias);
+    }
     return output;
 }
 
-// Backward pass
+/*
+ * @brief : Backward propagation
+ */
 template <typename T>
 Tensor<T> LinearLayer<T>::backward(const Tensor<T>& grad_output)
 {
     // Compute gradients w.r.t weights and bias
     grad_weights_ = input_.transpose().matmul(grad_output);
     grad_bias_ = grad_output.sum(0);
+    grad_bias_.reshape({1, grad_output.shape()[1]});
 
     // Compute gradient w.r.t input to pass to previous layer
     Tensor<T> grad_input = grad_output.matmul(weights_.transpose());
     return grad_input;
 }
 
-// Get weights and bisa
+/*
+ * @brief : Get weights and bisa
+ */
 template <typename T>
 std::vector<Tensor<T>*> LinearLayer<T>::get_parameters()
 {
     return { &weights_, &bias_, &grad_weights_, &grad_bias_ };
 }
 
-// Zero gradients
+/*
+ * @brief : Clear up grad_weights and grad_bias.
+ */
 template <typename T>
 void LinearLayer<T>::zero_grad()
 {
@@ -106,5 +122,5 @@ void LinearLayer<T>::zero_grad()
     grad_bias_.fill(static_cast<T>(0));
 }
 
-} // cuda
+} // snnf
 

@@ -3,7 +3,7 @@
 #include "utils.h"
 #include "log.h"
 
-namespace cuda {
+namespace snnf {
 
 template <typename T>
 class Tensor {
@@ -43,7 +43,7 @@ private:
     std::vector<uint32_t> shape_;
     std::vector<uint32_t> stride_;
     uint32_t size_;
-    std::vector<T> data_;
+    std::vector<T> data_;   // stores actual data.
     std::shared_ptr<Tensor<T>> grad_;
 
     // Helper functions
@@ -71,11 +71,10 @@ Tensor<T>::Tensor(const std::vector<uint32_t>& shape, const std::vector<T>& data
     compute_stride();
     size_ = std::accumulate(shape_.begin(), shape_.end(), 1, std::multiplies<uint32_t>());
     if (data_.size() != size_) {
-        LOG_ERROR(std::invalid_argument, "Data size does not match tensor shape.");
+        LOG_ERROR(std::invalid_argument, "Tensor::Tensor : Data size does not match tensor shape.");
     }
 }
 
-// Helper functions
 template <typename T>
 void Tensor<T>::compute_stride() {
     stride_.resize(shape_.size());
@@ -86,6 +85,9 @@ void Tensor<T>::compute_stride() {
     }
 }
 
+/*
+ * @brief : Compute offset for data access.
+ */
 template <typename T>
 uint32_t Tensor<T>::compute_offset(const std::vector<uint32_t>& indices) const {
     if (indices.size() != shape_.size()) {
@@ -108,7 +110,9 @@ void Tensor<T>::check_shape(const Tensor<T>& other) const {
     }
 }
 
-// Element access
+/*
+ * @brief : Element access.
+ */
 template <typename T>
 T& Tensor<T>::at(const std::vector<uint32_t>& indices) {
     uint32_t offset = compute_offset(indices);
@@ -121,7 +125,6 @@ const T& Tensor<T>::at(const std::vector<uint32_t>& indices) const {
     return data_[offset];
 }
 
-// Utilities
 template <typename T>
 void Tensor<T>::fill(T value) {
     std::fill(data_.begin(), data_.end(), value);
@@ -131,13 +134,15 @@ template <typename T>
 void Tensor<T>::reshape(const std::vector<uint32_t>& new_shape) {
     uint32_t new_size = std::accumulate(new_shape.begin(), new_shape.end(), 1, std::multiplies<uint32_t>());
     if (new_size != size_) {
-        LOG_ERROR(std::invalid_argument, "New shape size must match original size.");
+        LOG_ERROR(std::invalid_argument, "Tensor::reshape : New shape size must match original size.");
     }
     shape_ = new_shape;
     compute_stride();
 }
 
-// Basic operations
+/*
+ * @brief : Arithmetic operations. Supports broadcasting but do it outside.
+ */
 template <typename T>
 Tensor<T> Tensor<T>::add(const Tensor<T>& other) const {
     check_shape(other);
@@ -174,7 +179,7 @@ Tensor<T> Tensor<T>::divide(const Tensor<T>& other) const {
     Tensor<T> result(shape_);
     for (uint32_t i = 0; i < size_; ++i) {
         if (other.data_[i] == static_cast<T>(0)) {
-            LOG_ERROR(std::runtime_error, "Tensor::devide : Division by zero.");
+            LOG_ERROR(std::runtime_error, "Tensor::divide : Division by zero.");
         }
         result.data_[i] = data_[i] / other.data_[i];
     }
@@ -184,10 +189,10 @@ Tensor<T> Tensor<T>::divide(const Tensor<T>& other) const {
 template <typename T>
 Tensor<T> Tensor<T>::matmul(const Tensor<T>& other) const {
     if (shape_.size() != 2 || other.shape_.size() != 2) {
-        LOG_ERROR(std::invalid_argument, "matmul only supports 2D tensors.");
+        LOG_ERROR(std::invalid_argument, "Tensor::matmul : Matmul only supports 2D tensors.");
     }
     if (shape_[1] != other.shape_[0]) {
-        LOG_ERROR(std::invalid_argument, "Inner dimensions do not match for matmul.");
+        LOG_ERROR(std::invalid_argument, "Tensor::matmul : Inner dimensions do not match for matmul.");
     }
 
     uint32_t M = shape_[0];
@@ -207,10 +212,13 @@ Tensor<T> Tensor<T>::matmul(const Tensor<T>& other) const {
     return result;
 }
 
+/*
+ * @brief : Element access. Only supports 2d tensors for now.
+ */
 template <typename T>
 Tensor<T> Tensor<T>::transpose() const {
     if (shape_.size() != 2) {
-        LOG_ERROR(std::invalid_argument, "transpose only supports 2D tensors.");
+        LOG_ERROR(std::invalid_argument, "Tensor::transpose : Transpose only supports 2D tensors.");
     }
     uint32_t rows = shape_[0];
     uint32_t cols = shape_[1];
@@ -224,10 +232,13 @@ Tensor<T> Tensor<T>::transpose() const {
     return result;
 }
 
+/*
+ * @brief : Sum tensor by a given dimension. Reduces tensor size.
+ */
 template <typename T>
 Tensor<T> Tensor<T>::sum(int dim) const {
     if (dim < 0 || dim >= static_cast<int>(shape_.size())) {
-        LOG_ERROR(std::invalid_argument, "Invalid dimension for sum.");
+        LOG_ERROR(std::invalid_argument, "Tensor::sum : Invalid dimension for sum.");
     }
     std::vector<uint32_t> result_shape = shape_;
     result_shape.erase(result_shape.begin() + dim);
@@ -257,10 +268,13 @@ Tensor<T> Tensor<T>::sum(int dim) const {
     return result;
 }
 
+/*
+ * @brief : Broadcast to a new shape.
+ */
 template <typename T>
 Tensor<T> Tensor<T>::broadcast_to(const std::vector<uint32_t>& target_shape) const {
     if (shape_.size() > target_shape.size()) {
-        LOG_ERROR(std::invalid_argument, "Cannot broadcast to fewer dimensions.");
+        LOG_ERROR(std::invalid_argument, "Tensor::broadcast_to : Cannot broadcast to fewer dimensions.");
     }
 
     std::vector<uint32_t> new_shape = shape_;
@@ -270,7 +284,7 @@ Tensor<T> Tensor<T>::broadcast_to(const std::vector<uint32_t>& target_shape) con
 
     for (size_t i = 0; i < target_shape.size(); ++i) {
         if (new_shape[i] != target_shape[i] && new_shape[i] != 1) {
-            LOG_ERROR(std::invalid_argument, "Shapes cannot be broadcasted.");
+            LOG_ERROR(std::invalid_argument, "Tensor::broadcast_to : Shapes cannot be broadcasted.");
         }
     }
 
@@ -301,7 +315,9 @@ Tensor<T> Tensor<T>::broadcast_to(const std::vector<uint32_t>& target_shape) con
     return result;
 }
 
-// Gradient support
+/*
+ * @brief : Gradient support.
+ */
 template <typename T>
 Tensor<T>& Tensor<T>::grad() {
     if (!grad_) {
@@ -321,7 +337,7 @@ void Tensor<T>::zero_grad() {
 template <typename T>
 void Tensor<T>::random(T lower, T upper) {
     if (lower >= upper) {
-        LOG_ERROR(std::invalid_argument, "Lower bound must be less than upper bound.");
+        LOG_ERROR(std::invalid_argument, "Tensor::random : Lower bound must be less than upper bound.");
     }
 
     std::default_random_engine engine(std::random_device{}());
@@ -334,7 +350,7 @@ void Tensor<T>::random(T lower, T upper) {
 template <typename T>
 void Tensor<T>::random_normal(T mean, T stddev) {
     if (stddev <= static_cast<T>(0)) {
-        LOG_ERROR(std::invalid_argument, "Standard deviation must be positive.");
+        LOG_ERROR(std::invalid_argument, "Tensor::random_normal : Standard deviation must be positive.");
     }
 
     std::default_random_engine engine(std::random_device{}());
@@ -344,4 +360,4 @@ void Tensor<T>::random_normal(T mean, T stddev) {
     }
 }
 
-}  // cuda
+}  // snnf

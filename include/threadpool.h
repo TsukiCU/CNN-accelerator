@@ -6,9 +6,9 @@
 #include <future>
 #include <functional>
 
-#include "common.h"
+#include "utils.h"
 
-namespace cuda {
+namespace snnf {
 
 class ThreadPool {
 public:
@@ -94,4 +94,4 @@ inline ThreadPool::~ThreadPool()
         worker.join();
 }
 
-} // cuda
+} // snnf

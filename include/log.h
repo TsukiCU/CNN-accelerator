@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-namespace cuda {
+namespace snnf {
 
 #define RED   "\e[1;31m"    // Log Error
 #define YELLOW "\e[1;33m"   // Log Warning
@@ -38,4 +38,4 @@ namespace cuda {
         std::cout << WHITE << "INFO : " << msg << DEFA << std::endl; \
 } while (0)
 
-} // cuda
+} // snnf
