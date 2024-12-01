@@ -8,7 +8,7 @@ namespace snnf {
 template <typename T>
 class Tensor {
 public:
-    // Constructors
+    Tensor() {}
     Tensor(const std::vector<uint32_t>& shape);
     Tensor(const std::vector<uint32_t>& shape, const std::vector<T>& data);
 
@@ -85,7 +85,7 @@ void Tensor<T>::compute_stride() {
     }
 }
 
-/*
+/**
  * @brief : Compute offset for data access.
  */
 template <typename T>
@@ -110,7 +110,7 @@ void Tensor<T>::check_shape(const Tensor<T>& other) const {
     }
 }
 
-/*
+/**
  * @brief : Element access.
  */
 template <typename T>
@@ -140,7 +140,7 @@ void Tensor<T>::reshape(const std::vector<uint32_t>& new_shape) {
     compute_stride();
 }
 
-/*
+/**
  * @brief : Arithmetic operations. Supports broadcasting but do it outside.
  */
 template <typename T>
@@ -212,7 +212,7 @@ Tensor<T> Tensor<T>::matmul(const Tensor<T>& other) const {
     return result;
 }
 
-/*
+/**
  * @brief : Element access. Only supports 2d tensors for now.
  */
 template <typename T>
@@ -232,7 +232,7 @@ Tensor<T> Tensor<T>::transpose() const {
     return result;
 }
 
-/*
+/**
  * @brief : Sum tensor by a given dimension. Reduces tensor size.
  */
 template <typename T>
@@ -268,7 +268,7 @@ Tensor<T> Tensor<T>::sum(int dim) const {
     return result;
 }
 
-/*
+/**
  * @brief : Broadcast to a new shape.
  */
 template <typename T>
@@ -315,7 +315,7 @@ Tensor<T> Tensor<T>::broadcast_to(const std::vector<uint32_t>& target_shape) con
     return result;
 }
 
-/*
+/**
  * @brief : Gradient support.
  */
 template <typename T>

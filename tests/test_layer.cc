@@ -2,6 +2,9 @@
 #include "../include/layer.h"
 
 using namespace snnf;
+using namespace snnf::layer;
+
+/// @brief Linear Layer Test Unit.
 
 // ========== LinearLayer Constructor Test ============
 
@@ -79,4 +82,66 @@ TEST(LinearLayerTest, FullIntegration) {
 
     EXPECT_EQ(grad_weights->shape(), (std::vector<uint32_t>{2, 2}));
     EXPECT_EQ(grad_bias->shape(), (std::vector<uint32_t>{1, 2}));
+}
+
+
+/// @brief Activation Layer Test Unit.
+
+// ========== ReLU Layer Forward Test ===========
+
+TEST(ReLULayerTest, ForwardPass) {
+    ReLULayer<float> relu;
+    Tensor<float> input({2, 3}, {-1.0, 0.0, 1.0, 2.0, -2.0, 3.0});
+    Tensor<float> output = relu.forward(input);
+
+    std::vector<float> expected = {0.0, 0.0, 1.0, 2.0, 0.0, 3.0};
+    for (uint32_t i = 0; i < output.size(); ++i) {
+        EXPECT_EQ(output.data()[i], expected[i]);
+    }
+}
+
+// ========== ReLU Layer Backward Test ===========
+
+TEST(ReLULayerTest, BackwardPass) {
+    ReLULayer<float> relu;
+    Tensor<float> input({2, 3}, {-1.0, 0.0, 1.0, 2.0, -2.0, 3.0});
+    relu.forward(input);
+
+    Tensor<float> grad_output({2, 3}, {1.0, 1.0, 1.0, 1.0, 1.0, 1.0});
+    Tensor<float> grad_input = relu.backward(grad_output);
+
+    std::vector<float> expected = {0.0, 0.0, 1.0, 1.0, 0.0, 1.0};
+    for (uint32_t i = 0; i < grad_input.size(); ++i) {
+        EXPECT_EQ(grad_input.data()[i], expected[i]);
+    }
+}
+
+// ========== Sigmoid Layer Forward Test ===========
+
+TEST(SigmoidLayerTest, ForwardPass) {
+    SigmoidLayer<float> sigmoid;
+    Tensor<float> input({2, 3}, {0.0, 1.0, -1.0, 2.0, -2.0, 3.0});
+    Tensor<float> output = sigmoid.forward(input);
+
+    for (uint32_t i = 0; i < output.size(); ++i) {
+        float expected = 1.0f / (1.0f + std::exp(-input.data()[i]));
+        EXPECT_NEAR(output.data()[i], expected, 1e-5);
+    }
+}
+
+// ========== Sigmoid Layer Backward Test ===========
+
+TEST(SigmoidLayerTest, BackwardPass) {
+    SigmoidLayer<float> sigmoid;
+    Tensor<float> input({2, 3}, {0.0, 1.0, -1.0, 2.0, -2.0, 3.0});
+    Tensor<float> output = sigmoid.forward(input);
+
+    Tensor<float> grad_output({2, 3}, {1.0, 1.0, 1.0, 1.0, 1.0, 1.0});
+    Tensor<float> grad_input = sigmoid.backward(grad_output);
+
+    for (uint32_t i = 0; i < grad_input.size(); ++i) {
+        float sig = output.data()[i];
+        float expected = grad_output.data()[i] * sig * (1.0f - sig);
+        EXPECT_NEAR(grad_input.data()[i], expected, 1e-5);
+    }
 }

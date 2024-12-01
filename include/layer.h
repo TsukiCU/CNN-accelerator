@@ -6,12 +6,15 @@
 
 namespace snnf {
 
-/*
- * @brief : base class for all layers.
+namespace layer {
+
+/**
+ * @brief : base class for all other layers.
  */
 template <typename T>
 class Layer {
 public:
+    Layer() = default;
     virtual ~Layer() = default;
 
     virtual Tensor<T> forward(const Tensor<T>& input) = 0;
@@ -23,8 +26,10 @@ public:
     virtual void zero_grad() {}
 };
 
-/*
- * @brief : Linear class for fully connected layer.
+
+/**
+ * @brief : Linear layer class for fully connected layer.
+ * @todo : Include more types of activation layer.
  */
 template <typename T>
 class LinearLayer : public Layer<T> {
@@ -49,78 +54,54 @@ private:
 };
 
 
-/*********************** Impl of LinearLayer methods ***********************/
-
-/* 
- * @brief : initialzie weights randomly and bias to 0.
- * @todo : support other initialization methods. 
+/**
+ * @brief : Abstract activation layer base class.
  */
 template <typename T>
-LinearLayer<T>::LinearLayer(uint32_t in_features, uint32_t out_features)
-    : in_features_(in_features),
-      out_features_(out_features),
-      weights_({in_features, out_features}),
-      bias_({1, out_features}),
-      input_({1, in_features}),
-      grad_weights_({in_features, out_features}),
-      grad_bias_({1, out_features})
-{
-    weights_.random();
-    bias_.fill(static_cast<T>(0));
-}
+class ActivationLayer : public Layer<T> {
+public:
+    ActivationLayer() = default;
+    virtual ~ActivationLayer() = default;
 
-/*
- * @brief : Forward propagation
+    // Must instantiate a specific activation layer.
+    virtual Tensor<T> forward(const Tensor<T>& input) override = 0;
+    virtual Tensor<T> backward(const Tensor<T>& grad_output) override = 0;
+};
+
+
+/**
+ * @brief : ReLU layer class.
  */
 template <typename T>
-Tensor<T> LinearLayer<T>::forward(const Tensor<T>& input)
-{
-    input_ = input; 
-    Tensor<T> output = input.matmul(weights_);  // Linear transformation.
-    if (output.shape() == bias_.shape()) {
-        output = output.add(bias_);
-    } else {
-        LOG_INFO("Layer::forward : Broadcasting bias to a new shape.");
-        Tensor<T> new_bias = bias_.broadcast_to(output.shape());
-        output = output.add(new_bias);
-    }
-    return output;
-}
+class ReLULayer : public ActivationLayer<T> {
+public:
+    ReLULayer() = default;
+    ~ReLULayer() = default;
 
-/*
- * @brief : Backward propagation
+    Tensor<T> forward(const Tensor<T>& input) override;
+    Tensor<T> backward(const Tensor<T>& grad_output) override;
+
+private:
+    Tensor<T> input_;  // Cache input for backward pass
+};
+
+
+/**
+ * @brief : Sigmoid layer class.
  */
 template <typename T>
-Tensor<T> LinearLayer<T>::backward(const Tensor<T>& grad_output)
-{
-    // Compute gradients w.r.t weights and bias
-    grad_weights_ = input_.transpose().matmul(grad_output);
-    grad_bias_ = grad_output.sum(0);
-    grad_bias_.reshape({1, grad_output.shape()[1]});
+class SigmoidLayer : public ActivationLayer<T> {
+public:
+    SigmoidLayer() = default;
+    ~SigmoidLayer() = default;
 
-    // Compute gradient w.r.t input to pass to previous layer
-    Tensor<T> grad_input = grad_output.matmul(weights_.transpose());
-    return grad_input;
-}
+    Tensor<T> forward(const Tensor<T>& input) override;
+    Tensor<T> backward(const Tensor<T>& grad_output) override;
 
-/*
- * @brief : Get weights and bisa
- */
-template <typename T>
-std::vector<Tensor<T>*> LinearLayer<T>::get_parameters()
-{
-    return { &weights_, &bias_, &grad_weights_, &grad_bias_ };
-}
+private:
+    Tensor<T> output_;  // Cache output for backward pass
+};
 
-/*
- * @brief : Clear up grad_weights and grad_bias.
- */
-template <typename T>
-void LinearLayer<T>::zero_grad()
-{
-    grad_weights_.fill(static_cast<T>(0));
-    grad_bias_.fill(static_cast<T>(0));
-}
+} // layer
 
 } // snnf
-
