@@ -9,5 +9,5 @@ test.*
 # Binary
 cifar
 test
-test_memory
 test_tensor
+test_layer

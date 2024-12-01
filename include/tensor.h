@@ -1,6 +1,6 @@
 #pragma once
 
-#include "common.h"
+#include "utils.h"
 #include "log.h"
 
 namespace cuda {
@@ -12,7 +12,6 @@ public:
     Tensor(const std::vector<uint32_t>& shape);
     Tensor(const std::vector<uint32_t>& shape, const std::vector<T>& data);
 
-    // Accessors
     const std::vector<uint32_t>& shape() const { return shape_; }
     const std::vector<uint32_t>& stride() const { return stride_; }
     uint32_t size() const { return size_; }
@@ -34,9 +33,11 @@ public:
     Tensor<T> sum(int dim) const;
     Tensor<T> broadcast_to(const std::vector<uint32_t>& target_shape) const;
 
-    // Gradient support
+    // For training.
     Tensor<T>& grad();
     void zero_grad();
+    void random(T lower = static_cast<T>(0), T upper = static_cast<T>(1));          // Uniform
+    void random_normal(T mean = static_cast<T>(0), T stddev = static_cast<T>(1));   // Normal 
     
 private:
     std::vector<uint32_t> shape_;
@@ -50,6 +51,9 @@ private:
     uint32_t compute_offset(const std::vector<uint32_t>& indices) const;
     void check_shape(const Tensor<T>& other) const;
 };
+
+
+/*********************** Impl of Tenosr ***********************/
 
 template <typename T>
 Tensor<T>::Tensor(const std::vector<uint32_t>& shape)
@@ -311,6 +315,32 @@ template <typename T>
 void Tensor<T>::zero_grad() {
     if (grad_) {
         grad_->fill(static_cast<T>(0));
+    }
+}
+
+template <typename T>
+void Tensor<T>::random(T lower, T upper) {
+    if (lower >= upper) {
+        LOG_ERROR(std::invalid_argument, "Lower bound must be less than upper bound.");
+    }
+
+    std::default_random_engine engine(std::random_device{}());
+    std::uniform_real_distribution<T> dist(lower, upper);
+    for (auto& elem : data_) {
+        elem = dist(engine);
+    }
+}
+
+template <typename T>
+void Tensor<T>::random_normal(T mean, T stddev) {
+    if (stddev <= static_cast<T>(0)) {
+        LOG_ERROR(std::invalid_argument, "Standard deviation must be positive.");
+    }
+
+    std::default_random_engine engine(std::random_device{}());
+    std::normal_distribution<T> dist(mean, stddev);
+    for (auto& elem : data_) {
+        elem = dist(engine);
     }
 }
 
