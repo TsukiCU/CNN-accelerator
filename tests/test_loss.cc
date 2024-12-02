@@ -1,4 +1,4 @@
-#include "../include/loss.h"
+#include "loss.h"
 #include <gtest/gtest.h>
 
 using namespace snnf;

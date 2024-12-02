@@ -1,4 +1,4 @@
-#include "../include/loss.h"
+#include "loss.h"
 
 namespace snnf {
 

@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include "../include/layer.h"
-#include "../include/optimizer.h"
+#include "layer.h"
+#include "optimizer.h"
 
 using namespace snnf;
 using namespace snnf::layer;

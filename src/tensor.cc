@@ -1,4 +1,4 @@
-#include "../include/tensor.h"
+#include "tensor.h"
 
 namespace snnf {
 

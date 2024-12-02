@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../include/tensor.h"
+#include "tensor.h"
 
 using namespace snnf;
 

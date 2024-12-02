@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../include/layer.h"
+#include "layer.h"
 
 using namespace snnf;
 using namespace snnf::layer;

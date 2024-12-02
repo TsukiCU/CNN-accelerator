@@ -1,6 +1,6 @@
 // optimizer.cc
 
-#include "../include/optimizer.h"
+#include "optimizer.h"
 
 namespace snnf {
 
