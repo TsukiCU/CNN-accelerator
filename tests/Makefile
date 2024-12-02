@@ -2,12 +2,13 @@ GCC = g++
 CFLAG = -g -Wall -O2
 LIBS = -lgtest -lgtest_main -lpthread
 
-TARGET = test_tensor test_layer
+TARGET = test_tensor test_layer test_loss test_optimizer
 
 # source files.
 TENSOR_SRC = test_tensor.cc ../src/tensor.cc
 LAYER_SRC  = test_layer.cc ../src/tensor.cc ../src/linear.cc ../src/activation.cc
 LOSS_SRC   = test_loss.cc ../src/tensor.cc ../src/loss.cc
+OPTIMIZER_SRC = test_optimizer.cc ../src/tensor.cc ../src/linear.cc ../src/optimizer.cc
 
 all: $(TARGET)
 
@@ -19,6 +20,9 @@ test_layer : $(LAYER_SRC)
 
 test_loss : $(LOSS_SRC)
 	$(GCC) $(CFLAG) $(LOSS_SRC) -o $@ $(LIBS)
+
+test_optimizer : $(OPTIMIZER_SRC)
+	$(GCC) $(CFLAG) $(OPTIMIZER_SRC) -o $@ $(LIBS)
 
 clean:
 	rm -f $(TARGET)

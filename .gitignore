@@ -12,3 +12,4 @@ test
 test_tensor
 test_layer
 test_loss
+test_optimizer
