@@ -5,6 +5,7 @@
 #include <memory>
 #include <thread>
 #include <mutex>
+#include <cmath>
 #include <numeric>
 #include <random>
 #include <algorithm>

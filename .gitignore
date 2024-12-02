@@ -11,3 +11,4 @@ cifar
 test
 test_tensor
 test_layer
+test_loss
