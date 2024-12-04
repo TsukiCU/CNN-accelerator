@@ -7,6 +7,9 @@ namespace snnf {
  */  
 template <typename T>
 T MSELoss<T>::forward(const Tensor<T>& input, const Tensor<T>& target) {
+    if (input.shape() != target.shape()) {
+        LOG_ERROR(std::invalid_argument, "MSELoss::forward : Prediction and target have different shapes.");
+    }
     input_ = input;
     target_ = target;
 
@@ -40,6 +43,10 @@ Tensor<T> MSELoss<T>::backward() {
  */  
 template <typename T>
 T CrossEntropyLoss<T>::forward(const Tensor<T>& input, const Tensor<T>& target) {
+    if (input.shape() != target.shape()) {
+        LOG_ERROR(std::invalid_argument, "CrossEntropyLoss::forward : Prediction and target have different shapes.");
+    }
+
     input_ = input;
     target_ = target;
 

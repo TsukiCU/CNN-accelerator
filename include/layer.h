@@ -49,6 +49,8 @@ private:
     Tensor<T> bias_;
     Tensor<T> input_;
 
+    // The direction and size of the weights and biases 
+    // that need to be adjusted in the current training batch.
     Tensor<T> grad_weights_;
     Tensor<T> grad_bias_;
 };

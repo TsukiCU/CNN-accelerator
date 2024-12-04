@@ -18,7 +18,7 @@ public:
     const std::vector<T>& data() const { return data_; }
     std::vector<T>& data() { return data_; }
 
-    // Basic operations
+    // Basic operations.
     void fill(T value);
     void reshape(const std::vector<uint32_t>& new_shape);
     T& at(const std::vector<uint32_t>& indices);
@@ -33,9 +33,12 @@ public:
     Tensor<T> sum(int dim) const;
     Tensor<T> broadcast_to(const std::vector<uint32_t>& target_shape) const;
 
-    // For training.
+    // Gradient support.
     Tensor<T>& grad();
     void zero_grad();
+    void set_grad(const Tensor<T>& gradient);
+
+    // randomized initialization.
     void random(T lower = static_cast<T>(0), T upper = static_cast<T>(1));          // Uniform
     void random_normal(T mean = static_cast<T>(0), T stddev = static_cast<T>(1));   // Normal 
     
@@ -46,7 +49,7 @@ private:
     std::vector<T> data_;   // stores actual data.
     std::shared_ptr<Tensor<T>> grad_;
 
-    // Helper functions
+    // Helper functions.
     void compute_stride();
     uint32_t compute_offset(const std::vector<uint32_t>& indices) const;
     void check_shape(const Tensor<T>& other) const;

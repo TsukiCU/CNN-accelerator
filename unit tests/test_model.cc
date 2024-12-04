@@ -24,9 +24,8 @@ TEST(ModelTest, ForwardBackward) {
     optimizer.zero_grad();
     Tensor<float> output = model.forward(input);
 
-    // float loss = loss_fn.forward(output, target), expected = 0.783039;
-    // EXPECT_NEAR(loss, 0.783039, 1e-5);
-
+    // Weights are random so can't be tested.
+    loss_fn.forward(output, target);
     Tensor<float> loss_grad = loss_fn.backward();
     model.backward(loss_grad);
 

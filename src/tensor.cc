@@ -265,6 +265,7 @@ Tensor<T> Tensor<T>::broadcast_to(const std::vector<uint32_t>& target_shape) con
 /**
  * @brief : Gradient support.
  */
+
 template <typename T>
 Tensor<T>& Tensor<T>::grad() {
     if (!grad_) {
@@ -276,9 +277,20 @@ Tensor<T>& Tensor<T>::grad() {
 
 template <typename T>
 void Tensor<T>::zero_grad() {
-    if (grad_) {
+    if (!grad_) {
+        LOG_INFO("Tensor::zero_grad : Filling grad with zeroes.");
+        grad_ = std::make_shared<Tensor<T>>(shape_);
+    }
+    grad_->fill(static_cast<T>(0));
+}
+
+template <typename T>
+void Tensor<T>::set_grad(const Tensor<T>& gradient) {
+    if (!grad_) {
+        grad_ = std::make_shared<Tensor<T>>(shape_);
         grad_->fill(static_cast<T>(0));
     }
+    grad_ = std::make_shared<Tensor<T>>(gradient);
 }
 
 template <typename T>

@@ -10,7 +10,7 @@ using namespace snnf::layer;
 
 TEST(LinearLayerTest, ConstructorInitializesParameters) {
     LinearLayer<float> layer(4, 3);
-    EXPECT_EQ(layer.get_parameters().size(), 4);  // weights, bias, grad_weights, grad_bias
+    EXPECT_EQ(layer.get_parameters().size(), 2);  // weights, bias.
 
     auto weights = layer.get_parameters()[0];
     auto bias = layer.get_parameters()[1];
@@ -39,11 +39,11 @@ TEST(LinearLayerTest, BackwardPass) {
 
     EXPECT_EQ(grad_input.shape(), (std::vector<uint32_t>{2, 4}));  // Grad input shape [2, 4]
 
-    auto grad_weights = layer.get_parameters()[2];
-    auto grad_bias = layer.get_parameters()[3];
+    auto grad_weights = layer.get_parameters()[0]->grad();
+    auto grad_bias = layer.get_parameters()[1]->grad();
 
-    EXPECT_EQ(grad_weights->shape(), (std::vector<uint32_t>{4, 3}));  // Grad weights shape [4, 3]
-    EXPECT_EQ(grad_bias->shape(), (std::vector<uint32_t>{1, 3}));    // Grad bias shape [1, 3]
+    EXPECT_EQ(grad_weights.shape(), (std::vector<uint32_t>{4, 3}));  // Grad weights shape [4, 3]
+    EXPECT_EQ(grad_bias.shape(), (std::vector<uint32_t>{1, 3}));    // Grad bias shape [1, 3]
 }
 
 // ========== LinearLayer ZeroGrad Test ============
@@ -55,13 +55,12 @@ TEST(LinearLayerTest, ZeroGrad) {
     layer.forward(Tensor<float>({2, 4}, {1, 2, 3, 4, 5, 6, 7, 8}));
     layer.backward(grad_output);
 
-    auto grad_weights = layer.get_parameters()[2];
-    auto grad_bias = layer.get_parameters()[3];
-
     layer.zero_grad();
+    auto grad_weights = layer.get_parameters()[0]->grad();
+    auto grad_bias = layer.get_parameters()[1]->grad();
 
-    EXPECT_EQ(grad_weights->data(), std::vector<float>(grad_weights->size(), 0.0f));
-    EXPECT_EQ(grad_bias->data(), std::vector<float>(grad_bias->size(), 0.0f));
+    EXPECT_EQ(grad_weights.data(), std::vector<float>(grad_weights.size(), 0.0f));
+    EXPECT_EQ(grad_bias.data(), std::vector<float>(grad_bias.size(), 0.0f));
 }
 
 // ========== LinearLayer Integration Test ============
@@ -77,11 +76,11 @@ TEST(LinearLayerTest, FullIntegration) {
     EXPECT_EQ(output.shape(), (std::vector<uint32_t>{2, 2}));
     EXPECT_EQ(grad_input.shape(), (std::vector<uint32_t>{2, 2}));
 
-    auto grad_weights = layer.get_parameters()[2];
-    auto grad_bias = layer.get_parameters()[3];
+    auto grad_weights = layer.get_parameters()[0]->grad();
+    auto grad_bias = layer.get_parameters()[1]->grad();
 
-    EXPECT_EQ(grad_weights->shape(), (std::vector<uint32_t>{2, 2}));
-    EXPECT_EQ(grad_bias->shape(), (std::vector<uint32_t>{1, 2}));
+    EXPECT_EQ(grad_weights.shape(), (std::vector<uint32_t>{2, 2}));
+    EXPECT_EQ(grad_bias.shape(), (std::vector<uint32_t>{1, 2}));
 }
 
 

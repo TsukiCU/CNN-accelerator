@@ -8,6 +8,9 @@
 #include <cmath>
 #include <numeric>
 #include <random>
+#include <string>
+#include <fstream>
+#include <sstream>
 #include <algorithm>
 #include <stdexcept>
 

@@ -11,17 +11,17 @@ public:
     Optimizer() = default;
     virtual ~Optimizer() = default;
 
-    // Update parameters
+    ///@brief :  Update parameters
     virtual void step() = 0;
 
-    // Zero gradients of all parameters
+    ///@brief : Zero gradients of all parameters
     virtual void zero_grad();
 
-    // Add parameters to the optimizer
+    ///@brief : Add parameters to the optimizer
     void add_parameters(const std::vector<Tensor<T>*>& params);
 
 protected:
-    std::vector<Tensor<T>*> parameters_;  // Pointers to model parameters
+    std::vector<Tensor<T>*> parameters_;
 };
 
 template <typename T>

@@ -6,6 +6,7 @@ namespace layer {
 
 /**
  * @brief : Initialzie weights randomly and bias to 0.
+ * @param : Size of the input and output features.
  * @todo : Support other initialization methods. 
  */
 template <typename T>
@@ -18,9 +19,13 @@ LinearLayer<T>::LinearLayer(uint32_t in_features, uint32_t out_features)
       grad_weights_({in_features, out_features}),
       grad_bias_({1, out_features})
 {
-    weights_.random();
+    // For now simply randomize it. Could extend to including but not limited to:
+    // 1. Kaiming for ReLU.
+    // 2. Xavier for Sigmoid and Tanh.
+    weights_.random(-0.5, 0.5);
     bias_.fill(static_cast<T>(0));
 }
+
 
 /**
  * @brief : Forward propagation
@@ -51,18 +56,22 @@ Tensor<T> LinearLayer<T>::backward(const Tensor<T>& grad_output)
     grad_bias_ = grad_output.sum(0);
     grad_bias_.reshape({1, grad_output.shape()[1]});
 
+    // Get the gradient by calling grad() instead of accessing directly.
+    weights_.set_grad(grad_weights_);
+    bias_.set_grad(grad_bias_);
+
     // Compute gradient w.r.t input to pass to previous layer
     Tensor<T> grad_input = grad_output.matmul(weights_.transpose());
     return grad_input;
 }
 
 /**
- * @brief : Get weights and bisa
+ * @brief : Get weights and bias for each layer.
  */
 template <typename T>
 std::vector<Tensor<T>*> LinearLayer<T>::get_parameters()
 {
-    return { &weights_, &bias_, &grad_weights_, &grad_bias_ };
+    return { &weights_, &bias_ };
 }
 
 /**
@@ -71,6 +80,8 @@ std::vector<Tensor<T>*> LinearLayer<T>::get_parameters()
 template <typename T>
 void LinearLayer<T>::zero_grad()
 {
+    weights_.zero_grad();
+    bias_.zero_grad();
     grad_weights_.fill(static_cast<T>(0));
     grad_bias_.fill(static_cast<T>(0));
 }
