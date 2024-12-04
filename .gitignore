@@ -7,10 +7,15 @@ archived/
 test.*
 
 # Binary
-cifar
+iris
 test
 test_tensor
 test_layer
 test_loss
 test_optimizer
 test_model
+
+# Dataset
+*.txt
+*.csv
+data/

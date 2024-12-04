@@ -22,6 +22,9 @@ public:
     virtual std::pair<Tensor<T>, Tensor<T>> get_item(size_t index) const = 0;
 };
 
+/**
+ * @brief : input Tensor : [batch_size, feature].
+*/
 template <typename T>
 class DataLoader {
 public:
@@ -30,7 +33,7 @@ public:
 
     void reset();
     bool has_next() const;
-    std::pair<Tensor<T>, Tensor<T>> next_batch();
+    std::pair<Tensor<T>, Tensor<T>> next_batch(); // get next batch
 
 private:
     const Dataset<T>& dataset_;

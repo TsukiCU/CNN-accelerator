@@ -15,6 +15,7 @@ public:
     const std::vector<uint32_t>& shape() const { return shape_; }
     const std::vector<uint32_t>& stride() const { return stride_; }
     uint32_t size() const { return size_; }
+    uint32_t dim() const { return shape_.size(); }
     const std::vector<T>& data() const { return data_; }
     std::vector<T>& data() { return data_; }
 

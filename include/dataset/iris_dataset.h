@@ -1,11 +1,14 @@
 #pragma once
 
-#include "../dataset.h"
+#include "dataset.h"
 
 namespace snnf {
 
 namespace dataset {
 
+/**
+ * @brief : Iris dataset. Four features and one label. 
+*/
 template <typename T>
 class IrisDataset : public Dataset<T> {
 public:

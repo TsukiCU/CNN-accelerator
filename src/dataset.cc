@@ -32,6 +32,7 @@ bool DataLoader<T>::has_next() const {
 
 template <typename T>
 std::pair<Tensor<T>, Tensor<T>> DataLoader<T>::next_batch() {
+    // Batch for this round : [current_index , end_index].
     size_t end_index = std::min(current_index_ + batch_size_, indices_.size());
     std::vector<T> batch_data;
     std::vector<T> batch_labels;
@@ -42,15 +43,20 @@ std::pair<Tensor<T>, Tensor<T>> DataLoader<T>::next_batch() {
     for (size_t i = current_index_; i < end_index; ++i) {
         auto item = dataset_.get_item(indices_[i]);
         auto& data = item.first;
+        if (data.dim() != 1) {
+            // Matmul only supports two-dimensional tensors.
+            LOG_ERROR(std::runtime_error, "DataLoader::next_batch : Each item in the batch must be one-dimensional.");
+        }
         auto& label = item.second;
 
+        // Add batch dimension (0 as a placeholder).
         if (data_shape.empty()) {
             data_shape = data.shape();
-            data_shape.insert(data_shape.begin(), 0);  // Add batch dimension
+            data_shape.insert(data_shape.begin(), 0);
         }
         if (label_shape.empty()) {
             label_shape = label.shape();
-            label_shape.insert(label_shape.begin(), 0);  // Add batch dimension
+            label_shape.insert(label_shape.begin(), 0);
         }
 
         batch_data.insert(batch_data.end(), data.data().begin(), data.data().end());
