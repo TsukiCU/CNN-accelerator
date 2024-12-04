@@ -3,7 +3,7 @@
 namespace snnf {
 
 /**
- * @brief: Forward pass
+ * @brief: Forward pass for MSELoss
  */  
 template <typename T>
 T MSELoss<T>::forward(const Tensor<T>& input, const Tensor<T>& target) {
@@ -25,7 +25,7 @@ T MSELoss<T>::forward(const Tensor<T>& input, const Tensor<T>& target) {
 }
 
 /**
- * @brief: Backward pass
+ * @brief: Backward pass for MSELoss
  */  
 template <typename T>
 Tensor<T> MSELoss<T>::backward() {
@@ -39,7 +39,7 @@ Tensor<T> MSELoss<T>::backward() {
 }
 
 /**
- * @brief: Forward pass. Not very precise (around 1e-3 precision.)
+ * @brief: Forward pass for CrossEntropyLoss
  */  
 template <typename T>
 T CrossEntropyLoss<T>::forward(const Tensor<T>& input, const Tensor<T>& target) {
@@ -56,7 +56,7 @@ T CrossEntropyLoss<T>::forward(const Tensor<T>& input, const Tensor<T>& target) 
     uint32_t num_classes = input.shape()[1];
 
     for (uint32_t i = 0; i < batch_size; ++i) {
-        // Compute max value for numerical stability (Prevent exponetial overflow).
+        // Compute max value for numerical stability (Prevent exponential overflow).
         T max_val = input.at({i, 0});
         for (uint32_t j = 1; j < num_classes; ++j) {
             T val = input.at({i, j});
@@ -94,7 +94,7 @@ T CrossEntropyLoss<T>::forward(const Tensor<T>& input, const Tensor<T>& target) 
 }
 
 /**
- * @brief: Backward pass
+ * @brief: Backward pass for CrossEntropyLoss
  */  
 template <typename T>
 Tensor<T> CrossEntropyLoss<T>::backward() {
@@ -112,10 +112,58 @@ Tensor<T> CrossEntropyLoss<T>::backward() {
     return grad_input;
 }
 
+/**
+ * @brief: Forward pass for HuberLoss
+ */  
+template <typename T>
+T HuberLoss<T>::forward(const Tensor<T>& input, const Tensor<T>& target) {
+    if (input.shape() != target.shape()) {
+        LOG_ERROR(std::invalid_argument, "HuberLoss::forward : Prediction and target have different shapes.");
+    }
+
+    input_ = input;
+    target_ = target;
+
+    // Compute Huber loss
+    T loss = static_cast<T>(0);
+    uint32_t N = input.size();
+    for (uint32_t i = 0; i < N; ++i) {
+        T diff = input.data()[i] - target.data()[i];
+        if (std::abs(diff) <= delta_) {
+            loss += static_cast<T>(0.5) * diff * diff;
+        } else {
+            loss += delta_ * (std::abs(diff) - static_cast<T>(0.5) * delta_);
+        }
+    }
+    loss /= static_cast<T>(N);
+    return loss;
+}
+
+/**
+ * @brief: Backward pass for HuberLoss
+ */  
+template <typename T>
+Tensor<T> HuberLoss<T>::backward() {
+    // Compute gradient w.r.t input
+    uint32_t N = input_.size();
+    Tensor<T> grad_input(input_.shape());
+    for (uint32_t i = 0; i < N; ++i) {
+        T diff = input_.data()[i] - target_.data()[i];
+        if (std::abs(diff) <= delta_) {
+            grad_input.data()[i] = diff / static_cast<T>(N);
+        } else {
+            grad_input.data()[i] = delta_ * (diff > static_cast<T>(0) ? 1 : -1) / static_cast<T>(N);
+        }
+    }
+    return grad_input;
+}
+
 // Explicit template instantiation
 template class MSELoss<float>;
 template class MSELoss<double>;
 template class CrossEntropyLoss<float>;
 template class CrossEntropyLoss<double>;
+template class HuberLoss<float>;
+template class HuberLoss<double>;
 
 } // snnf

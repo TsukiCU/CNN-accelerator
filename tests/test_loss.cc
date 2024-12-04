@@ -32,3 +32,27 @@ TEST(CrossEntropyLossTest, ForwardBackward) {
     // For simplicity, we can just check the gradient shape
     EXPECT_EQ(grad_input.shape(), input.shape());
 }
+
+TEST(HuberLossTest, ForwardBackward) {
+    float delta = 1.0f;  // Huber delta value
+    HuberLoss<float> huber_loss(delta);
+    Tensor<float> input({2, 3}, {1.0, 2.0, 3.0, 4.0, 5.0, 6.0});
+    Tensor<float> target({2, 3}, {1.5, 2.5, 3.5, 3.5, 4.5, 5.5});
+
+    float loss = huber_loss.forward(input, target);
+    // Manually calculate the expected loss:
+    // Loss = (0.5 * 0.5^2 + 0.5 * 0.5^2 + 0.5 * 0.5^2 + 0.5 * 0.5 + 0.5 * 0.5 + 0.5 * 0.5) / 6
+    EXPECT_NEAR(loss, 0.208333f, 1e-5);
+
+    Tensor<float> grad_input = huber_loss.backward();
+    std::vector<float> expected_grad = {-0.0833333f, -0.0833333f, -0.0833333f,
+                                        0.0833333f, 0.0833333f, 0.0833333f};
+    for (uint32_t i = 0; i < grad_input.size(); ++i) {
+        EXPECT_NEAR(grad_input.data()[i], expected_grad[i], 1e-5);
+    }
+}
+
+int main(int argc, char** argv) {
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
+}
