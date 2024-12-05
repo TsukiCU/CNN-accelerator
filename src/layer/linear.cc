@@ -10,7 +10,7 @@ namespace layer {
  * @todo : Support other initialization methods. 
  */
 template <typename T>
-LinearLayer<T>::LinearLayer(uint32_t in_features, uint32_t out_features)
+LinearLayer<T>::LinearLayer(uint32_t in_features, uint32_t out_features, InitMethod init)
     : in_features_(in_features),
       out_features_(out_features),
       weights_({in_features, out_features}),
@@ -19,10 +19,27 @@ LinearLayer<T>::LinearLayer(uint32_t in_features, uint32_t out_features)
       grad_weights_({in_features, out_features}),
       grad_bias_({1, out_features})
 {
-    // For now simply randomize it. Could extend to including but not limited to:
-    // 1. Kaiming for ReLU.
-    // 2. Xavier for Sigmoid and Tanh.
-    weights_.random(-0.5, 0.5);
+    switch (init) {
+        case InitMethod::Uniform:
+            weights_.random(-0.1, 0.1);
+            break;
+        case InitMethod::Gaussian:
+            weights_.random_normal(0, 0.01);
+            break;
+        case InitMethod::Kaiming: {
+            float stddev = std::sqrt(2.0f / in_features);
+            weights_.random_normal(0, stddev);
+            break;
+        }
+        case InitMethod::Xavier: {
+            float limit = std::sqrt(6.0f / (in_features + out_features));
+            weights_.random(-limit, limit);
+            break;
+        }
+        default:
+            LOG_ERROR(std::invalid_argument, "LinearLayer::LinearLayer : Unknown initialization method.");
+    }
+
     bias_.fill(static_cast<T>(0));
 }
 

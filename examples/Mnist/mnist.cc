@@ -9,8 +9,8 @@ using namespace snnf;
 using namespace snnf::layer;
 using namespace snnf::dataset;
 
-const float learning_rate = 0.015;
-const int num_epochs = 5;
+const float learning_rate = 0.01;
+const int num_epochs = 6;
 
 const std::string train_image = "data/train-images-idx3-ubyte";
 const std::string train_label = "data/train-labels-idx1-ubyte";
@@ -58,7 +58,7 @@ int main()
             model.backward(loss_grad);
 
             optimizer.step();
-            if (!(batch_cnt % 150)) {
+            if (!(batch_cnt % 200)) {
                 std::cout << "Epoch " << epoch + 1 << " Batch " << batch_cnt
                   << ", Loss: " << total_loss / batch_cnt << std::endl;
             }
