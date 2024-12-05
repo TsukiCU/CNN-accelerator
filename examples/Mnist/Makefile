@@ -9,8 +9,8 @@ MNIST_DATA = data/train-images-idx3-ubyte \
 			 data/t10k-images-idx3-ubyte  \
 			 data/t10k-labels-idx1-ubyte
 
-SOURCE_FILES = mnist.cc ../../src/tensor.cc ../../src/linear.cc ../../src/activation.cc \
-../../src/optimizer.cc ../../src/loss.cc ../../src/model.cc ../../src/dataset.cc \
+SOURCE_FILES = mnist.cc ../../src/tensor.cc ../../src/layer/linear.cc ../../src/layer/activation.cc \
+../../src/layer/softmax.cc ../../src/optimizer.cc ../../src/loss.cc ../../src/model.cc ../../src/dataset/dataset.cc \
 ../../src/dataset/mnist_dataset.cc
 
 all: prepare mnist

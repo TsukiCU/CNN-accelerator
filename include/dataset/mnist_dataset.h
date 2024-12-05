@@ -19,6 +19,8 @@ public:
     size_t size() const override;
     std::pair<Tensor<T>, Tensor<T>> get_item(size_t index) const override;
 
+    void normalize(float mean, float std) override;
+
 private:
     std::vector<Tensor<T>> images_;
     std::vector<Tensor<T>> labels_;

@@ -2,7 +2,6 @@
 
 #include "mnist_dataset.h"
 #include <fstream>
-#include <iostream>
 #include <vector>
 
 namespace snnf {
@@ -53,6 +52,7 @@ void MNISTDataset<T>::parse_images(const std::string& file_path) {
         std::vector<unsigned char> buffer(image_size);
         file.read(reinterpret_cast<char*>(buffer.data()), image_size);
 
+        // The min and max value for MNIST dataset is known to be 0 and 255.
         std::vector<T> image_data(image_size);
         for (size_t j = 0; j < image_size; ++j) {
             image_data[j] = static_cast<T>(buffer[j]) / static_cast<T>(255.0);
@@ -100,6 +100,17 @@ size_t MNISTDataset<T>::size() const {
 template <typename T>
 std::pair<Tensor<T>, Tensor<T>> MNISTDataset<T>::get_item(size_t index) const {
     return { images_[index], labels_[index] };
+}
+
+template <typename T>
+void MNISTDataset<T>::normalize(float mean, float std) {
+    // Each element is already sdevided by 255 in parse_images.
+    uint32_t image_size = images_.size();
+    for (uint32_t i = 0; i < image_size-1; ++i) {
+        for (uint32_t j = 0; j < in_features; ++j) {
+            images_[i].at({j}) = ( images_[i].at({j}) - mean ) / std;
+        }
+    }
 }
 
 template class MNISTDataset<float>;

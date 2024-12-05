@@ -101,7 +101,23 @@ public:
     Tensor<T> backward(const Tensor<T>& grad_output) override;
 
 private:
-    Tensor<T> output_;  // Cache output for backward pass
+    Tensor<T> output_;  // Cache for backward pass
+};
+
+/**
+ * @brief : Softmax layer for classification tasks.
+*/
+template <typename T>
+class SoftmaxLayer : public Layer<T> {
+public:
+    SoftmaxLayer() = default;
+    ~SoftmaxLayer() = default;
+
+    Tensor<T> forward(const Tensor<T>& input) override;
+    Tensor<T> backward(const Tensor<T>& grad_output) override;
+
+private:
+    Tensor<T> output_; // Cache for backward pass
 };
 
 } // layer

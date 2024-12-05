@@ -4,13 +4,14 @@ LIBS = -lgtest -lgtest_main -lpthread
 INCLUDES = -I../include/
 
 TARGET = test_tensor test_layer test_loss test_optimizer test_model
+LAYER = ../src/layer/
 
 # source files.
 TENSOR_SRC = test_tensor.cc ../src/tensor.cc
-LAYER_SRC  = test_layer.cc ../src/tensor.cc ../src/linear.cc ../src/activation.cc
+LAYER_SRC  = test_layer.cc ../src/tensor.cc $(LAYER)linear.cc $(LAYER)activation.cc $(LAYER)softmax.cc
 LOSS_SRC   = test_loss.cc ../src/tensor.cc ../src/loss.cc
-OPTIMIZER_SRC = test_optimizer.cc ../src/tensor.cc ../src/linear.cc ../src/optimizer.cc
-MODEL_SRC = test_model.cc ../src/tensor.cc ../src/linear.cc ../src/activation.cc ../src/optimizer.cc ../src/loss.cc ../src/model.cc
+OPTIMIZER_SRC = test_optimizer.cc ../src/tensor.cc $(LAYER)linear.cc ../src/optimizer.cc
+MODEL_SRC = test_model.cc ../src/tensor.cc $(LAYER)linear.cc $(LAYER)activation.cc ../src/optimizer.cc ../src/loss.cc ../src/model.cc
 
 all: $(TARGET)
 

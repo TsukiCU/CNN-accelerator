@@ -25,6 +25,11 @@ public:
     */
     virtual void load_data(const std::string& data_path) {}
     virtual void load_data(const std::string& train_file, const std::string& label_file) {}
+
+    /**
+     * @brief : Normalize the training batch to [lower, upper].
+    */
+    virtual void normalize(float mean, float std) {}
 };
 
 /**

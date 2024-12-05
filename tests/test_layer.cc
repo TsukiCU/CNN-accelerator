@@ -144,3 +144,34 @@ TEST(SigmoidLayerTest, BackwardPass) {
         EXPECT_NEAR(grad_input.data()[i], expected, 1e-5);
     }
 }
+
+// ========== Softmax Layer Backward Test ===========
+
+TEST(SoftmaxLayerTest, ForwardPass) {
+    SoftmaxLayer<float> softmax;
+    Tensor<float> input({2, 3}, {1.0, 2.0, 3.0, 1.0, 2.0, 3.0});
+    Tensor<float> output = softmax.forward(input);
+
+    for (uint32_t i = 0; i < input.shape()[0]; ++i) {
+        float sum_exp = 0;
+        for (uint32_t j = 0; j < input.shape()[1]; ++j) {
+            sum_exp += std::exp(input.at({i, j}));
+        }
+        for (uint32_t j = 0; j < input.shape()[1]; ++j) {
+            float expected = std::exp(input.at({i, j})) / sum_exp;
+            EXPECT_NEAR(output.at({i, j}), expected, 1e-5);
+        }
+    }
+}
+
+TEST(SoftmaxLayerTest, BackwardPass) {
+    SoftmaxLayer<float> softmax;
+    Tensor<float> input({1, 3}, {1.0, 2.0, 3.0});
+    Tensor<float> output = softmax.forward(input);
+
+    Tensor<float> grad_output({1, 3}, {0.1, 0.2, 0.3});
+    Tensor<float> grad_input = softmax.backward(grad_output);
+
+    // Only verify shape here as well.
+    EXPECT_EQ(grad_input.shape(), input.shape());
+}
