@@ -21,8 +21,8 @@ class MnistNN(nn.Module):
         x = self.softmax(x)
         return x
 
-learning_rate = 0.05
-num_epochs = 5
+learning_rate = 0.01
+num_epochs = 6
 batch_size = 64
 
 transform = transforms.Compose([
@@ -55,7 +55,7 @@ for epoch in range(num_epochs):
         optimizer.step()
         total_loss += loss.item()
 
-        if batch_idx % 150 == 0:
+        if batch_idx % 200 == 0:
             print(f"Epoch {epoch + 1} Batch {batch_idx}, Loss: {total_loss / (batch_idx + 1):.4f}")
 
 ################## Testing ##################
@@ -69,4 +69,4 @@ with torch.no_grad():
         correct += (predicted == target).sum().item()
 
 accuracy = 100 * correct / total
-print(f"Test Accuracy: {accuracy:.2f}%")
+print(f"\033[1;31m\nTest Accuracy: {accuracy:.2f}%\n\033[0m")

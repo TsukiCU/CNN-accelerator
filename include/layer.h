@@ -6,6 +6,8 @@
 
 namespace snnf {
 
+enum class InitMethod { Uniform, Gaussian, Kaiming, Xavier };
+
 namespace layer {
 
 /**
@@ -34,7 +36,7 @@ public:
 template <typename T>
 class LinearLayer : public Layer<T> {
 public:
-    LinearLayer(uint32_t in_features, uint32_t out_features);
+    LinearLayer(uint32_t in_features, uint32_t out_features, InitMethod init=InitMethod::Kaiming);
 
     Tensor<T> forward(const Tensor<T>& input) override;
     Tensor<T> backward(const Tensor<T>& grad_output) override;
