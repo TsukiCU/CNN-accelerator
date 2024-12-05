@@ -8,6 +8,8 @@ test.*
 
 # Binary
 iris
+mnist
+
 test
 test_tensor
 test_layer
@@ -19,3 +21,4 @@ test_model
 *.txt
 *.csv
 data/
+*.gz

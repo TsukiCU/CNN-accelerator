@@ -12,14 +12,19 @@ public:
     Dataset() = default;
     ~Dataset() = default;
 
-    ///@brief : Load data from file or other sources
-    virtual void load_data(const std::string& file_path) = 0;
-
     ///@brief : Get the size of the dataset
     virtual size_t size() const = 0;
 
     ///@brief : Get data and labels
     virtual std::pair<Tensor<T>, Tensor<T>> get_item(size_t index) const = 0;
+
+    /**
+     * @brief : Load data from file or other sources.
+     * @param : <training data> <label data> (optional).
+     * @note  : For now, each item in every dataset must be one-dimensional.
+    */
+    virtual void load_data(const std::string& data_path) {}
+    virtual void load_data(const std::string& train_file, const std::string& label_file) {}
 };
 
 /**

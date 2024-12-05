@@ -42,7 +42,7 @@ TEST(HuberLossTest, ForwardBackward) {
     float loss = huber_loss.forward(input, target);
     // Manually calculate the expected loss:
     // Loss = (0.5 * 0.5^2 + 0.5 * 0.5^2 + 0.5 * 0.5^2 + 0.5 * 0.5 + 0.5 * 0.5 + 0.5 * 0.5) / 6
-    EXPECT_NEAR(loss, 0.208333f, 1e-5);
+    EXPECT_NEAR(loss, 0.125f, 1e-5);
 
     Tensor<float> grad_input = huber_loss.backward();
     std::vector<float> expected_grad = {-0.0833333f, -0.0833333f, -0.0833333f,

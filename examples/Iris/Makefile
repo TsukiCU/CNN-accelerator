@@ -13,10 +13,11 @@ SOURCE_FILES = iris.cc ../../src/tensor.cc ../../src/linear.cc ../../src/activat
 all: prepare iris
 
 prepare:
-	@echo "Getting Iris dataset..."
+	@echo "\e[1;32m...Getting Iris dataset...\e[0m"
 	@if [ ! -e $(IRIS_DATA) ]; then \
 		./get_iris.sh; \
 	fi
+	@echo "\e[1;32mdone\e[0m"
 
 iris: $(SOURCE_FILES) $(IRIS_DATA)
 	$(GCC) $(INCLUDES) $(CFLAG) $(SOURCE_FILES) -o $(TARGET) $(LIBS)

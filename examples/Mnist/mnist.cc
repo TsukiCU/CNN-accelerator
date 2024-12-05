@@ -3,43 +3,40 @@
 #include "loss.h"
 #include "optimizer.h"
 
-#include "iris_dataset.h"
+#include "mnist_dataset.h"
 
 using namespace snnf;
 using namespace snnf::layer;
 using namespace snnf::dataset;
 
-const int num_epochs = 20;
-const float train_pct = 0.8f;
-const float learning_rate = 0.01f;
+const float learning_rate = 0.01;
+const int num_epochs = 1;
 
-int main() {
-    IrisDataset<float> dataset;
-    dataset.load_data("data/iris.txt");
+const std::string train_file = "data/train-images-idx3-ubyte";
+const std::string label_file = "data/train-labels-idx1-ubyte";
 
-    // For train_test_split.
-    // size_t dataset_size = dataset.size();
-    // size_t train_size = static_cast<size_t>(dataset_size * train_pct);
-    // size_t test_size = dataset_size - train_size;
-
-    // Load data, set batch size to 16, shuffle.
-    DataLoader<float> train_loader(dataset, 16, true);
+int main()
+{
+    MNISTDataset<float> dataset;
+    dataset.load_data(train_file, label_file);
+    DataLoader<float> train_loader(dataset, 64, true);
 
     Model<float> model;
-    model.add_layer(std::make_shared<LinearLayer<float>>(4, 16));
+    model.add_layer(std::make_shared<LinearLayer<float>>(784, 64));
     model.add_layer(std::make_shared<ReLULayer<float>>());
-    model.add_layer(std::make_shared<LinearLayer<float>>(16, 3));
-    model.add_layer(std::make_shared<SigmoidLayer<float>>());
+    model.add_layer(std::make_shared<LinearLayer<float>>(64, 10));
+    model.add_layer(std::make_shared<ReLULayer<float>>());
 
     SGD<float> optimizer(learning_rate);
     optimizer.add_parameters(model.get_parameters());
-
     MSELoss<float> loss_fn;
 
     for (size_t epoch = 0; epoch < num_epochs; ++epoch) {
         train_loader.reset();
         float total_loss = 0.0f;
         size_t batch_count = 0;
+
+        int round = 0;
 
         while (train_loader.has_next()) {
             auto batch = train_loader.next_batch();
@@ -58,12 +55,14 @@ int main() {
             model.backward(loss_grad);
 
             optimizer.step();
-
+            if (!(round % 10)) {
+                std::cout << "Epoch " << epoch + 1 << " Round " << round
+                  << ", Loss: " << total_loss / batch_count << std::endl;
+            }
+            ++round;
         }
 
-        std::cout << "Epoch " << epoch + 1 << " of " << num_epochs
-                  << ", Loss: " << total_loss / batch_count << std::endl;
+        // std::cout << "Epoch " << epoch + 1 << " of " << num_epochs
+        //           << ", Loss: " << total_loss / batch_count << std::endl;
     }
-
-    return 0;
 }
