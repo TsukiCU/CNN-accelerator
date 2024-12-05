@@ -17,13 +17,8 @@ int main() {
     IrisDataset<float> dataset;
     dataset.load_data("data/iris.txt");
 
-    // For train_test_split.
-    // size_t dataset_size = dataset.size();
-    // size_t train_size = static_cast<size_t>(dataset_size * train_pct);
-    // size_t test_size = dataset_size - train_size;
-
-    // Load data, set batch size to 16, shuffle.
-    DataLoader<float> train_loader(dataset, 16, true);
+    // Load data, set batch size to 16, num_worker to 1, and shuffle.
+    DataLoader<float> train_loader(dataset, 16, true, 1);
 
     Model<float> model;
     model.add_layer(std::make_shared<LinearLayer<float>>(4, 16));

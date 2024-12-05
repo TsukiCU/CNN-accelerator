@@ -4,13 +4,22 @@ import torch.optim as optim
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 
-# The same parameters as our model.
+learning_rate = 0.01
+num_epochs = 5
+batch_size = 64
+transform = transforms.Compose([
+    transforms.ToTensor(), # Flatten to tensor.
+    transforms.Normalize((0.5,), (0.5,))
+])
+
 class MnistNN(nn.Module):
     def __init__(self):
         super(MnistNN, self).__init__()
-        self.fc1 = nn.Linear(784, 64)
+        self.fc1 = nn.Linear(784, 128)
         self.relu1 = nn.ReLU()
-        self.fc2 = nn.Linear(64, 10)
+        self.fc2 = nn.Linear(128, 64);
+        self.relu2 = nn.ReLU()
+        self.fc3 = nn.Linear(64, 10)
         self.softmax = nn.Softmax(dim=1)
 
     def forward(self, x):
@@ -18,17 +27,11 @@ class MnistNN(nn.Module):
         x = self.fc1(x)
         x = self.relu1(x)
         x = self.fc2(x)
+        x = self.relu2(x)
+        x = self.fc3(x)
+    
         x = self.softmax(x)
         return x
-
-learning_rate = 0.01
-num_epochs = 6
-batch_size = 64
-
-transform = transforms.Compose([
-    transforms.ToTensor(), # Flatten to tensor.
-    transforms.Normalize((0.5,), (0.5,))
-])
 
 ################## Training ##################
 
