@@ -1,0 +1,31 @@
+SNNF/
+├─ examples/
+│  ├─ basic/
+│  ├─ Iris/
+│  └─ Mnist/
+│
+├─ include/
+│  ├─ dataset/
+│  │  ├─ dataset.h
+│  │  ├─ iris_dataset.h
+│  │  └─ mnist_dataset.h
+│  └─ other core header files
+│
+├─ src/
+│  ├─ dataset/
+│  │  ├─ dataset.cc
+│  │  ├─ iris_dataset.cc
+│  │  └─ mnist_dataset.cc
+│  │
+│  ├─ layer/
+│  │  ├─ activation.cc
+│  │  ├─ linear.cc
+│  │  └─ softmax.cc
+│  └─ other core source files
+│
+├─ tests/
+│
+├─ docs/
+│
+├─ .gitignore
+├─ README.md

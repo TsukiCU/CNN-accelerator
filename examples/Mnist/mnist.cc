@@ -23,6 +23,7 @@ int main()
     MNISTDataset<float> train_dataset;
     train_dataset.load_data(train_image, train_label);
     train_dataset.normalize(0.5, 0.5);
+    // <dataset> <batch size> <shuffle> 
     DataLoader<float> train_loader(train_dataset, 64, true);
 
     Model<float> model;
@@ -30,7 +31,7 @@ int main()
     model.add_layer(std::make_shared<ReLULayer<float>>());
     model.add_layer(std::make_shared<LinearLayer<float>>(128, 64, InitMethod::Kaiming));
     model.add_layer(std::make_shared<ReLULayer<float>>());
-    model.add_layer(std::make_shared<LinearLayer<float>>(64, 10));
+    model.add_layer(std::make_shared<LinearLayer<float>>(64, 10, InitMethod::Kaiming));
     model.add_layer(std::make_shared<SoftmaxLayer<float>>());
 
     SGD<float> optimizer(learning_rate);
