@@ -8,7 +8,7 @@ namespace snnf {
 template <typename T>
 class Tensor {
 public:
-    Tensor() {}
+    Tensor() { size_ = 0; }
     Tensor(const std::vector<uint32_t>& shape);
     Tensor(const std::vector<uint32_t>& shape, const std::vector<T>& data);
 

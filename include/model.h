@@ -29,6 +29,12 @@ public:
     /// @brief: Zero gradients
     void zero_grad();
 
+    /// @brief: Save parameters after training.
+    void save_parameters(const std::string& filename);
+
+    /// @brief: Load parameters.
+    void load_parameters(const std::string& filename);
+
 private:
     std::vector<std::shared_ptr<Layer<T>>> layers_;
     Tensor<T> output_; // Stores the output of the last layer.
